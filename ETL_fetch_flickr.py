@@ -40,7 +40,7 @@ def fetch_flickr_photos():
                     "owner_name": photo.get("owner_name", "Unknown")
                 })
 
-    # **將資料存入 JSON**
+    # Store data into JSON
     with open("clean_flickr_data.json", "w") as file:
         json.dump(photos, file, indent=4)
 
