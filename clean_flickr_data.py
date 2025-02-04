@@ -1,40 +1,34 @@
-import requests
 import json
 
-FLICKR_API_KEY = "7a34f4c2958b36f2df639611439aeb4c"
+# Read JSON file
+with open("clean_flickr_data.json", "r") as file:
+    data = json.load(file)
 
-#Flickr API Request URL
-url = "https://www.flickr.com/services/rest/"
-params = {
-    "method": "flickr.photos.search",
-    "api_key": FLICKR_API_KEY,
-    "format": "json",
-    "nojsoncallback": 1,
-    "has_geo": 1,  #capture only photos with GPS location
-    "extras": "geo,license,url_m",
-    "per_page": 1000,
-    "page": 1
-}
+# Clean data
+cleaned_photos = []
 
-response = requests.get(url, params=params)
-data = response.json()
+for photo in data:
+    # Make sure the title exists
+    if not photo.get("title"):
+        continue  # skip this photo
 
-filtered_photos = []
+    # Make sure the owner_id exists
+    if not photo.get("owner_id"):
+        continue  # skip this photo
 
-if "photos" in data and "photo" in data["photos"]:
-    for photo in data["photos"]["photo"]:
-        #filter out data without latitude and longitude
-        if "latitude" in photo and "longitude" in photo and photo["latitude"] and photo["longitude"]:
-            #only Public Domain(free) licenses are retained
-            if photo["license"] in ["2", "3", "4", "5", "6", "7", "9", "10"]:  
-                filtered_photos.append({
-                    "id": photo["id"],
-                    "title": photo["title"],
-                    "latitude": float(photo["latitude"]),
-                    "longitude": float(photo["longitude"]),
-                    "url": photo["url_m"],
-                    "license": photo["license"]
-                })
+    # Make sure latitude & longitude are valid
+    if "latitude" not in photo or "longitude" not in photo:
+        continue  # skip this photo
 
-#output clean data
-print(json.dumps(filtered_photos, indent=4, ensure_ascii=False))
+    # Make sure that the license is free
+    if photo.get("license") not in ["1", "2", "3", "4", "5", "6", "9"]:
+        continue  # skip this photo
+
+    # If all checks pass, add to cleaned list
+    cleaned_photos.append(photo)
+
+# Save cleaned data
+with open("clean_flickr_data.json", "w") as file:
+    json.dump(cleaned_photos, file, indent=4)
+
+print(f"Data cleaning complete! {len(cleaned_photos)} photos saved.")
