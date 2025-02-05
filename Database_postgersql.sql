@@ -1,10 +1,10 @@
 -- Create locations table
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
-    bounding_box GEOMETRY,  -- 用於存儲空間數據
+    bounding_box GEOMETRY,  -- for storing spatial data
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    geom GEOMETRY(Point, 4326) -- PostGIS 地理座標
+    geom GEOMETRY(Point, 4326) -- PostGIS geographic coordinates
 );
 
 -- Create indexes to speed up queries
@@ -29,7 +29,7 @@ CREATE TABLE photos (
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
     owner_id INT REFERENCES owners(id) ON DELETE CASCADE,
-    geom GEOMETRY(Point, 4326) -- PostGIS 地理座標
+    geom GEOMETRY(Point, 4326) -- PostGIS geographic coordinates
 );
 
 -- Create indexes to speed up queries
