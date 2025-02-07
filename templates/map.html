@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body>
+    <h3>Click on the map to get pictures</h3>
+    <div id="map"></div>
+    <label for="radius">Search Radius:</label>
+    <input type="number" id="radius" value="500" min="1">
+    <select id="unit">
+        <option value="meters">Meters</option>
+        <option value="kilometers">Kilometers</option>
+    </select>
+    <p id="info">Click on the map to get coordinates.</p>
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([0, 0], 2);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker;
+        var circle;
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+            var radius = document.getElementById('radius').value;
+            var unit = document.getElementById('unit').value;
+            var radiusMeters = unit === 'kilometers' ? radius * 1000 : radius;
+            var radiusText = unit === 'kilometers' ? (radius / 1000) + ' km' : radius + ' meters';
+            
+            if (marker) {
+                marker.remove();
+            }
+            if (circle) {
+                circle.remove();
+            }
+            
+            marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`Lat: ${lat}, Lng: ${lng}<br>Radius: ${radiusText}`)
+                .openPopup();
+            
+            circle = L.circle([lat, lng], {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.3,
+                radius: radiusMeters
+            }).addTo(map);
+            
+            document.getElementById('info').innerText = `Coordinates: ${lat}, ${lng} | Radius: ${radiusText}`;
+            // Send data to Flask backend
+            fetch('/api/coordinates', {
+             method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: lat, longitude: lng, radius: radiusMeters })
+                })
+            .then(response => response.json())
+            .then(data => console.log('Server response:', data))
+            .catch(error => console.error('Error:', error));
+            });
+    </script>
+</body>
+</html>

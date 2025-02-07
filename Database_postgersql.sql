@@ -1,3 +1,6 @@
+-- Create POSTGis extension for table
+CREATE EXTENSION postgis;
+
 -- Create locations table
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,

@@ -6,7 +6,7 @@ import json
 conn = psycopg2.connect(
     dbname="geophoto", # Change to yours
     user="postgres", # Change to yours
-    password="leavetw2024", # Change to yours
+    password="lazyboy123", # Change to yours
     host="localhost", # Change to yours
     port="5432"
 )
