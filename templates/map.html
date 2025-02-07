@@ -12,12 +12,8 @@
 <body>
     <h3>Click on the map to get pictures</h3>
     <div id="map"></div>
-    <label for="radius">Search Radius:</label>
+    <label for="radius">Search Radius (meters):</label>
     <input type="number" id="radius" value="500" min="1">
-    <select id="unit">
-        <option value="meters">Meters</option>
-        <option value="kilometers">Kilometers</option>
-    </select>
     <p id="info">Click on the map to get coordinates.</p>
     
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -34,10 +30,8 @@
         map.on('click', function(e) {
             var lat = e.latlng.lat.toFixed(6);
             var lng = e.latlng.lng.toFixed(6);
-            var radius = document.getElementById('radius').value;
-            var unit = document.getElementById('unit').value;
-            var radiusMeters = unit === 'kilometers' ? radius * 1000 : radius;
-            var radiusText = unit === 'kilometers' ? (radius / 1000) + ' km' : radius + ' meters';
+            var radius = document.getElementById('radius').value; // Radius is in meters
+            var radiusText = radius + ' meters'; // Display the radius in meters
             
             if (marker) {
                 marker.remove();
@@ -54,7 +48,7 @@
                 color: 'red',
                 fillColor: '#f03',
                 fillOpacity: 0.3,
-                radius: radiusMeters
+                radius: radius
             }).addTo(map);
             
             document.getElementById('info').innerText = `Coordinates: ${lat}, ${lng} | Radius: ${radiusText}`;
@@ -62,7 +56,7 @@
             fetch('/api/coordinates', {
              method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latitude: lat, longitude: lng, radius: radiusMeters })
+                body: JSON.stringify({ latitude: lat, longitude: lng, radius: radius })
                 })
             .then(response => response.json())
             .then(data => console.log('Server response:', data))

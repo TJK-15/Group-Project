@@ -3,17 +3,22 @@ import psycopg2
 from psycopg2 import sql
 from datetime import datetime
 import os
+from dotenv import load_dotenv
 
 # 🔹 API Keys
 FLICKR_API_KEY = "7a34f4c2958b36f2df639611439aeb4c"
 MAPILLARY_ACCESS_TOKEN = "MLY|9221287197987531|a53011b8aa3930d9874dbe9f0aaf09b9"
+
+# Loads environment variables from .env for password security
+load_dotenv()
+DB_PASSWORD = os.getenv('DB_PASSWORD')
 
 # 🔹 Connect to PostgreSQL
 def get_db_connection():
     return psycopg2.connect(
         dbname="geophoto",
         user="postgres",
-        password="leavetw2024",  # enter yours
+        password= DB_PASSWORD, 
         host="localhost",
         port="5432"
     )
@@ -21,7 +26,7 @@ def get_db_connection():
 # =====================================================
 # 📌 Flickr photo retrieve function
 # =====================================================
-def fetch_flickr_photos():
+def fetch_flickr_photos(lat, lng, radius_km):
     print("Retrieving photos from Flickr...")
     url = "https://www.flickr.com/services/rest/"
     params = {
@@ -32,7 +37,10 @@ def fetch_flickr_photos():
         "has_geo": 1,
         "extras": "geo,url_o,owner_name",
         "per_page": 10,
-        "page": 1
+        "page": 1,
+        "lat": lat,  # Add latitude
+        "lon": lng,  # Add longitude
+        "radius": radius_km  # Add radius (in kilometers)
     }
 
     response = requests.get(url, params=params)
