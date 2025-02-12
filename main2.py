@@ -34,9 +34,7 @@ def get_db_connection():
         port=DB_PORT
     )
 
-# =====================================================
 # Reverse geocoding function
-# =====================================================
 def reverse_geocode(lat, lon):
     try:
         time.sleep(1)  # Delay 1 second to avoid overloading Nominatim
@@ -49,32 +47,33 @@ def reverse_geocode(lat, lon):
                 address.get("city", address.get("town", address.get("village", "Unknown")))
             )
     except Exception as e:
-        print(f"⚠️ Reverse geocoding errors: {e}")  # Display Errors
+        print(f"Reverse geocoding errors: {e}")  # Display Errors
     return "Unknown", "Unknown", "Unknown"
 
-# =====================================================
 # Retrieve Flickr Photo Function
-# =====================================================
 def fetch_flickr_photos():
     print("Retrieving photos from Flickr...")
     url = "https://www.flickr.com/services/rest/"
+    bbox = "-8.6910, 41.1070, -8.5530, 41.1810" # Set the lat and lon of the specific location 
+    
     params = {
         "method": "flickr.photos.search",
         "api_key": FLICKR_API_KEY,
         "format": "json",
-        "nojsoncallback": 1,
-        "has_geo": 1,
+        "nojsoncallback": 1, # When set to 1, Flickr will send back pure JSON
+        "has_geo": 1, # Whether to search only for geotagged photos, 1 means only geotagged photos, 0 is not limited
+        "bbox": bbox,
         "extras": "geo,url_o,owner_name,license,owner_url",
-        "license": "1,2,3,4,5,6,9",
+        "license": "1,2,3,4,5,6,7,8,9,10",
         "per_page": 5, # Adjust the number of photos 
-        "page": 5 # Adjust the number of photos 
+        "page": 1 # Choose the page of photos, usually set to 1
     }
 
     response = requests.get(url, params=params)
     data = response.json()
 
     if "photos" not in data:
-        print("❌ Unable to get Flickr photos")
+        print("Unable to get Flickr photos")
         return []
 
     photos = []
@@ -102,12 +101,10 @@ def fetch_flickr_photos():
                 "profile_url": owner_profile_url
             })
 
-    print(f"✅ Get {len(photos)} Flickr photos")
+    print(f"Get {len(photos)} Flickr photos")
     return photos
 
-# =====================================================
 # Retrieve Mapillary Photo Functions
-# =====================================================
 def fetch_mapillary_photos():
     print("Retrieving photos from Mapillary...")
     url = "https://graph.mapillary.com/images"
@@ -123,7 +120,7 @@ def fetch_mapillary_photos():
     data = response.json()
 
     if "data" not in data:
-        print("❌ Unable to get Mapillary photos")
+        print("Unable to get Mapillary photos")
         return []
 
     photos = []
@@ -150,15 +147,13 @@ def fetch_mapillary_photos():
                 "profile_url": owner_profile_url
             })
 
-    print(f"✅ Get {len(photos)} Mapillary photos")
+    print(f"Get {len(photos)} Mapillary photos")
     return photos
 
-# =====================================================
 # Save Photos to PostgreSQL
-# =====================================================
 def save_photos_to_db(photos):
     if not photos:
-        print("⚠️ No photos that can be stored")
+        print("No photos that can be stored")
         return
 
     print("Loading PostgreSQL...")
@@ -174,12 +169,12 @@ def save_photos_to_db(photos):
 
             # Filter out invalid URLs
             if not photo["url"] or photo["url"] == "N/A":
-                print(f"⚠️ Skip invalid URL photos: {photo_id}")
+                print(f"Skip invalid URL photos: {photo_id}")
                 continue
 
             # Filter out invalid owner_id
             if owner_id == "Unknown":
-                print(f"⚠️ Skip invalid Owner photos: {photo_id}")
+                print(f"Skip invalid Owner photos: {photo_id}")
                 continue
 
             # Save Location
@@ -187,6 +182,7 @@ def save_photos_to_db(photos):
                 """
                 INSERT INTO locations (latitude, longitude, country, state, city, geom)
                 VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+                ON CONFLICT (latitude, longitude) DO NOTHING
                 RETURNING id;
                 """,
                 (photo["latitude"], photo["longitude"], photo["country"], photo["state"], photo["city"], 
@@ -203,12 +199,10 @@ def save_photos_to_db(photos):
                 if location_id:
                     location_id = location_id[0]
                 else:
-                    print(f"⚠️ Location ID not found, skip photo {photo_id}")
+                    print(f"Location ID not found, skip photo {photo_id}")
                     continue  # Skip the photo
             
             # Save to owners table
-            # debug line
-            print("Inserting values into owners:", owner_id, photo["owner_name"], photo["profile_url"])
             cursor.execute(
                 """
                 INSERT INTO owners (id, username, profile_url)
@@ -237,22 +231,19 @@ def save_photos_to_db(photos):
             conn.close()
 
         except Exception as e:
-            print(f"⚠️ Unable to save photos {photo_id}: {e}")
-            print(traceback.format_exc())
+            print(f"Unable to save photos {photo_id}: {e}")
             conn.rollback()  # Avoid transaction lockup
             cursor.close()
             conn.close()
             continue
 
-    print("✅ All photos have been successfully saved to PostgreSQL!")
+    print("All photos have been successfully saved to PostgreSQL!")
 
-# =====================================================
 # Main Execution Functions
-# =====================================================
 if __name__ == "__main__":
     flickr_photos = fetch_flickr_photos()
     mapillary_photos = fetch_mapillary_photos()
 
     all_photos = flickr_photos + mapillary_photos
     save_photos_to_db(all_photos)
-    print("🎉 Done！")
+    print("Done！")
