@@ -7,7 +7,10 @@ CREATE TABLE locations (
     bounding_box GEOMETRY,  -- for storing spatial data
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    geom GEOMETRY(Point, 4326) -- PostGIS geographic coordinates
+    geom GEOMETRY(Point, 4326), -- PostGIS geographic coordinates
+    country VARCHAR(255),
+    "state" VARCHAR(255),
+    city VARCHAR(255)
 );
 
 -- Create indexes to speed up queries
@@ -15,14 +18,14 @@ CREATE INDEX idx_locations_geom ON locations USING GIST (geom);
 
 -- Create owners table
 CREATE TABLE owners (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
+    id TEXT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
     profile_url TEXT
 );
 
 -- Create photos table
 CREATE TABLE photos (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     url TEXT NOT NULL,
     source VARCHAR(255),
@@ -31,7 +34,7 @@ CREATE TABLE photos (
     location_id INT REFERENCES locations(id) ON DELETE SET NULL,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
-    owner_id INT REFERENCES owners(id) ON DELETE CASCADE,
+    owner_id TEXT REFERENCES owners(id) ON DELETE CASCADE,
     geom GEOMETRY(Point, 4326) -- PostGIS geographic coordinates
 );
 

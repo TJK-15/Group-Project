@@ -6,6 +6,7 @@ from datetime import datetime
 from geopy.geocoders import Nominatim
 from dotenv import load_dotenv
 import time
+import traceback
 
 # API Keys
 FLICKR_API_KEY = "51afcf93fbde43be1742a2f8d31f5430"
@@ -186,7 +187,6 @@ def save_photos_to_db(photos):
                 """
                 INSERT INTO locations (latitude, longitude, country, state, city, geom)
                 VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-                ON CONFLICT (latitude, longitude) DO NOTHING
                 RETURNING id;
                 """,
                 (photo["latitude"], photo["longitude"], photo["country"], photo["state"], photo["city"], 
@@ -206,7 +206,9 @@ def save_photos_to_db(photos):
                     print(f"⚠️ Location ID not found, skip photo {photo_id}")
                     continue  # Skip the photo
             
-            # Save Owner
+            # Save to owners table
+            # debug line
+            print("Inserting values into owners:", owner_id, photo["owner_name"], photo["profile_url"])
             cursor.execute(
                 """
                 INSERT INTO owners (id, username, profile_url)
@@ -214,9 +216,9 @@ def save_photos_to_db(photos):
                 ON CONFLICT (id) DO NOTHING;
                 """,
                 (owner_id, photo["owner_name"], photo["profile_url"]),
-            )
+            ) 
 
-            # Save Photos
+            # Save into Photos table
             cursor.execute(
                 """
                 INSERT INTO photos (id, title, url, source, uploaded_at, location_id, latitude, longitude, owner_id, geom)
@@ -236,6 +238,7 @@ def save_photos_to_db(photos):
 
         except Exception as e:
             print(f"⚠️ Unable to save photos {photo_id}: {e}")
+            print(traceback.format_exc())
             conn.rollback()  # Avoid transaction lockup
             cursor.close()
             conn.close()
