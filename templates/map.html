@@ -6,11 +6,23 @@
     <title>Interactive Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        #map { height: 500px; }
+        #map { 
+            height: 550px;
+            width: 1000px; }
+        .right_header {
+            position: absolute; 
+            top: 25px; 
+            right: 200px;
+            font-weight: bold;
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
     <h3>Click on the map to get pictures</h3>
+    <div id="header">
+        <span class="right_header">See images here</span>
+    </div>
     <div id="map"></div>
     <label for="radius">Search Radius (meters):</label>
     <input type="number" id="radius" value="500" min="1">
