@@ -25,17 +25,18 @@ CREATE TABLE owners (
 
 -- Create photos table
 CREATE TABLE photos (
-    id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
     url TEXT NOT NULL,
-    source VARCHAR(255),
-    tags TEXT[],
+    source TEXT,
+    tags JSONB,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     location_id INT REFERENCES locations(id) ON DELETE SET NULL,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
     owner_id TEXT REFERENCES owners(id) ON DELETE CASCADE,
     geom GEOMETRY(Point, 4326) -- PostGIS geographic coordinates
+    profile_url TEXT 
 );
 
 -- Create indexes to speed up queries

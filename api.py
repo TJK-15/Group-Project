@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import os
 import psycopg2
+from sqlalchemy import text
+from geoalchemy2 import Geometry
 
 # initialize Flask as app
 app = Flask(__name__)
@@ -15,15 +18,14 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
-# Connect to PostgreSQL
-def get_db_connection():
-    return psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT
-    )
+# PostgreSQL connection with SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{DB_PASSWORD}@localhost:5432/{DB_NAME}'
+
+# Enable PostGIS extension
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize our database in SQLAlchemy
+db = SQLAlchemy(app)
 
 # flask connects to html file using render_template
 @app.route('/')
@@ -42,16 +44,15 @@ def get_coordinates():
     if lat is None or lng is None or radius is None:
         return jsonify({'error': 'Invalid input'}), 400
     
-    # Return the json with coords in the response
-    return jsonify({
-        'latitude': lat,
-        'longitude': lng,
-        'radius': radius,
-    })
-    
-    # Searches database for images within radius
-    
+    query = text("""
+        SELECT id, title, ST_AsGeoJSON(geom) AS geom, url
+        FROM photos
+        WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius);
+    """)
 
+    results = db.session.execute(query, {"lat": lat, "lng": lng, "radius": radius}).fetchall()
+    
+    return jsonify([{"id": row[0], "title": row[1], "geom": row[2], "url": row[3]} for row in results])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
