@@ -43,7 +43,7 @@ def reverse_geocode(lat, lon):
             address = location.raw.get("address", {})
             return (
                 address.get("country", "Unknown"),
-                address.get("state", "Unknown"),
+                address.get("state", address.get("county", "Unknown")),
                 address.get("city", address.get("town", address.get("village", "Unknown")))
             )
     except Exception as e:
