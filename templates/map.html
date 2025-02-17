@@ -5,75 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        #map { 
-            height: 550px;
-            width: 1000px; }
-        .right_header {
-            position: absolute; 
-            top: 25px; 
-            right: 200px;
-            font-weight: bold;
-            font-size: 20px;
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="static/styles.css">
 </head>
 <body>
-    <h3>Click on the map to get pictures</h3>
-    <div id="header">
+    <div class="header-container">
+        <h3>Click on the map to get pictures</h3>
         <span class="right_header">See images here</span>
     </div>
-    <div id="map"></div>
+    <div class="container">
+        <div id="map"></div>
+        <div class="gallery-container">
+            <div id="gallery" class="gallery"></div>
+        </div>
+    </div>
+    <!-- 🔹 Wrap Map & Gallery in a Container -->
+    <div class="container">
+        <!-- Map Section -->
+        <div id="map"></div>
+
+        <!-- Image Gallery Section -->
+        <div class="gallery-container">
+            <div id="gallery" class="gallery"></div>
+        </div>
+    </div>
+
+    <!-- Image Modal for Enlarged View -->
+    <div id="image-modal">
+        <span class="close">&times;</span>
+        <img id="modal-img" />
+    </div>
     <label for="radius">Search Radius (meters):</label>
     <input type="number" id="radius" value="500" min="1">
     <p id="info">Click on the map to get coordinates.</p>
-    
+    <!-- Here we define a button to submit an image file -->
+    <div>
+        <label for="file">Upload Image:</label>
+        <input type="file" id="file" accept="image/*" />
+        <label for="username">Username:</label>
+        <input type="text" id="username" required />
+        <button id="upload-button">Upload</button>
+    </div>
+    <!-- Leaflet JS (required) -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([0, 0], 2);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
 
-        var marker;
-        var circle;
-
-        map.on('click', function(e) {
-            var lat = e.latlng.lat.toFixed(6);
-            var lng = e.latlng.lng.toFixed(6);
-            var radius = document.getElementById('radius').value; // Radius is in meters
-            var radiusText = radius + ' meters'; // Display the radius in meters
-            
-            if (marker) {
-                marker.remove();
-            }
-            if (circle) {
-                circle.remove();
-            }
-            
-            marker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`Lat: ${lat}, Lng: ${lng}<br>Radius: ${radiusText}`)
-                .openPopup();
-            
-            circle = L.circle([lat, lng], {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.3,
-                radius: radius
-            }).addTo(map);
-            
-            document.getElementById('info').innerText = `Coordinates: ${lat}, ${lng} | Radius: ${radiusText}`;
-            // Send data to Flask backend
-            fetch('/api/coordinates', {
-             method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latitude: lat, longitude: lng, radius: radius })
-                })
-            .then(response => response.json())
-            .then(data => console.log('Server response:', data))
-            .catch(error => console.error('Error:', error));
-            });
-    </script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </body>
 </html>
