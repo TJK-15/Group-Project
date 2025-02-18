@@ -1,14 +1,23 @@
-/* Full-page layout: Map (Left) & Gallery (Right) */
+/* Full-page layout: Map & Containers (Left) & Gallery (Right) */
 .container {
     display: flex;
-    flex-direction: row;  /* Arrange map and gallery side-by-side */
-    height: 100vh;  /* Make them take full viewport height */
+    flex-direction: row;  /* Arrange map+buttons and gallery side-by-side */
+    height: 100dvh;  /* Make them take 100% viewport height */
 }
 
 /* Map takes 50% width */
-#map {
+.map-button-container {
     flex: 1;  /* Takes 50% of the available space */
+    flex-direction: column; /* Arrange top to bottom */
     height: 100%;  /* Full height */
+}
+
+#map {
+    height: 75%;
+}
+
+#button-container {
+    height: 25%
 }
 
 /* Gallery takes 50% width */
@@ -55,6 +64,7 @@
     background: rgba(0, 0, 0, 0.8);
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 #image-modal img {

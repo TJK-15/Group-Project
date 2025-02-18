@@ -6,10 +6,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     // Image Gallery Logic
-    const gallery = document.getElementById("gallery");
+    gallery = document.getElementById("gallery");
 
     function loadImages(data) {
-        console.log("Data inside loadImages:", data); // Debugging output
+        data = data.slice(0, 10); // Just get first 10 images to save memory
+        console.log("#######Data inside loadImages#######:", data); // Debugging output
+        if (data.length == 0) {
+            alert("No images found. Expand radius");
+        }
         data.forEach(image => {
             const img = document.createElement("img");
             img.src = image.url;  // Correctly accessing the URL field
@@ -38,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // On click function, gets lat, long, radius and creates API request
     map.on('click', function(e) {
+        gallery.innerHTML = ''; // clear gallery
         var lat = e.latlng.lat.toFixed(6);
         var lng = e.latlng.lng.toFixed(6);
         var radius = document.getElementById('radius').value; // Radius is in meters
