@@ -7,10 +7,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Image Gallery Logic
     gallery = document.getElementById("gallery");
+    var markerGroup = L.layerGroup();
 
     function loadImages(data) {
+        console.log('marker length:', markerGroup.getLayers().length);
+        if (markerGroup.getLayers().length != 0) {
+            console.log('MARKER GROUP HAS LAYERS!!')
+            markerGroup.clearLayers(map);
+        } 
         data = data.slice(0, 10); // Just get first 10 images to save memory
         console.log("#######Data inside loadImages#######:", data); // Debugging output
+        console.log(markerGroup);
         if (data.length == 0) {
             alert("No images found. Expand radius");
         }
@@ -18,6 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const img = document.createElement("img");
             img.src = image.url;  // Correctly accessing the URL field
             img.alt = image.title || "Gallery Image";  // Use title if available
+            const coords = JSON.parse(image.geom);
+            console.log('Coordinates:', coords.coordinates); // Test with coords
+            var marker = L.marker([coords.coordinates[1], coords.coordinates[0]]).addTo(markerGroup);
+            markerGroup.addTo(map);
             img.addEventListener("click", () => openImageModal(image.url));  // Click event to enlarge image
             gallery.appendChild(img);
         });
@@ -37,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
         this.style.display = "none";
     });
 
-    var marker;
+    var cmarker;
     var circle;
 
     // On click function, gets lat, long, radius and creates API request
@@ -48,14 +59,14 @@ document.addEventListener("DOMContentLoaded", function () {
         var radius = document.getElementById('radius').value; // Radius is in meters
         var radiusText = radius + ' meters'; // Display the radius in meters
         
-        if (marker) {
-            marker.remove();
+        if (cmarker) {
+            cmarker.remove();
         }
         if (circle) {
             circle.remove();
         }
             
-        marker = L.marker([lat, lng]).addTo(map)
+        cmarker = L.marker([lat, lng]).addTo(map)
             .bindPopup(`Lat: ${lat}, Lng: ${lng}<br>Radius: ${radiusText}`)
             .openPopup();
             
@@ -94,8 +105,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Get the current coordinates from the map marker
-        const lat = marker ? marker.getLatLng().lat.toFixed(6) : null;
-        const lng = marker ? marker.getLatLng().lng.toFixed(6) : null;
+        const lat = cmarker ? cmarker.getLatLng().lat.toFixed(6) : null;
+        const lng = cmarker ? cmarker.getLatLng().lng.toFixed(6) : null;
 
         if (!lat || !lng) {
             alert('Please click on the map to select a location.');
