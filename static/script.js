@@ -10,18 +10,17 @@ document.addEventListener("DOMContentLoaded", function () {
     var markerGroup = L.layerGroup();
 
     function loadImages(data) {
-        console.log('marker length:', markerGroup.getLayers().length);
-        if (markerGroup.getLayers().length != 0) {
+        if (markerGroup.getLayers().length != 0) { // Removes markers from map if they exist previously 
             console.log('MARKER GROUP HAS LAYERS!!')
             markerGroup.clearLayers(map);
         } 
-        data = data.slice(0, 10); // Just get first 10 images to save memory
-        console.log("#######Data inside loadImages#######:", data); // Debugging output
-        console.log(markerGroup);
-        if (data.length == 0) {
+        //dLength = data.length();
+        data_preview = data.slice(0, 12); // Just get first 10 images to save memory
+        console.log("#######Data inside loadImages#######:", data_preview); // Debugging output
+        if (data_preview.length == 0) {
             alert("No images found. Expand radius");
         }
-        data.forEach(image => {
+        data_preview.forEach(image => {
             const img = document.createElement("img");
             img.src = image.url;  // Correctly accessing the URL field
             img.alt = image.title || "Gallery Image";  // Use title if available
