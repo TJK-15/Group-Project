@@ -6,21 +6,58 @@ document.addEventListener("DOMContentLoaded", function () {
     }).addTo(map);
 
     // Image Gallery Logic
-    gallery = document.getElementById("gallery");
+    const gallery = document.getElementById("gallery");
+    const loadMoreButton = document.createElement("button");
+    loadMoreButton.innerText = "Load More";
+    loadMoreButton.id = "load-more";
+    loadMoreButton.style.display = "none";  // Initially hidden
+    document.body.appendChild(loadMoreButton); // Append to body for positioning
     var markerGroup = L.layerGroup();
 
+     // Create Image Counter
+     const imageCounter = document.createElement("p");
+     imageCounter.id = "image-counter";
+     imageCounter.style.display = "none"; // Initially hidden
+     document.querySelector(".gallery-container").appendChild(imageCounter);
+
+    let allImages = [];
+    let currentIndex = 0;
+    const imagesPerPage = 12;
+
     function loadImages(data) {
+        console.log("#######Data inside loadImages#######:", data); // Debugging output
+        if (data.length == 0) { // Alert if no images are found
+            alert("No images found. Expand radius");
+        }
+        allImages = data;
+        imageTotal = data.length;
+        currentIndex = 0;
+        const imagesPerPage = 12;
+        displayNextImages();
+        loadMoreButton.style.display = allImages.length > imagesPerPage ? "block" : "none";
+    }
+
+    function displayNextImages() {
         if (markerGroup.getLayers().length != 0) { // Removes markers from map if they exist previously 
             console.log('MARKER GROUP HAS LAYERS!!')
             markerGroup.clearLayers(map);
         } 
-        //dLength = data.length();
-        data_preview = data.slice(0, 12); // Just get first 10 images to save memory
-        console.log("#######Data inside loadImages#######:", data_preview); // Debugging output
-        if (data_preview.length == 0) {
-            alert("No images found. Expand radius");
+
+        // Add to imageCounter
+        if (currentIndex+imagesPerPage <= imageTotal) {
+            imageCounter.innerText = `Showing ${currentIndex+1}-${currentIndex+imagesPerPage} of ${imageTotal}`;
+            imageCounter.style.display = "block";
+        } else if (imageTotal == 0) {
+            imageCounter.style.display = "none";
+        } else {
+            imageCounter.innerText = `Showing ${currentIndex+1} - ${imageTotal}`;
+            imageCounter.style.display = "block";
         }
-        data_preview.forEach(image => {
+        console.log('images being refreshed! currently displaying:', currentIndex + imagesPerPage, 'of total:', imageTotal);
+        gallery.innerHTML = ''; // clear gallery
+        const nextImageBatch = allImages.slice(currentIndex, currentIndex + imagesPerPage);
+        nextImageBatch.forEach(image => {
+            currentIndex = currentIndex + 1
             const img = document.createElement("img");
             img.src = image.url;  // Correctly accessing the URL field
             img.alt = image.title || "Gallery Image";  // Use title if available
@@ -30,8 +67,20 @@ document.addEventListener("DOMContentLoaded", function () {
             markerGroup.addTo(map);
             img.addEventListener("click", () => openImageModal(image.url));  // Click event to enlarge image
             gallery.appendChild(img);
+
+            // Disable the "Load More" button if there are no more images to load
+            if (currentIndex >= imageTotal) {
+                loadMoreButton.disabled = true;
+                loadMoreButton.style.display = "none"; // Optionally hide the button
+            } else {
+                loadMoreButton.disabled = false;
+                loadMoreButton.style.display = "block"; // Ensure the button is visible
+            }
         });
     }
+
+    // Click on load more to load next images
+    loadMoreButton.addEventListener("click", displayNextImages);
 
     // Open the enlarged image
     function openImageModal(imageUrl) {
