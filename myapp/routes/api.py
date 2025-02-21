@@ -61,8 +61,8 @@ def upload():
             locations = reverse_geocode(lat, lng)
             ctime = datetime.datetime.now()
             username = request.form['username']
-            # owner id generated
-            owner_id = str(uuid.uuid4())
+            # repo id generated
+            repo_id = str(uuid.uuid4())
             print("api.py lat, lng, locations, current time, username, owner_id are Ok!")
 
             # ensure lat and lng fields are populated
@@ -95,23 +95,26 @@ def upload():
                     location_id = location_result[0]
 
                     owners_query = text("""
-                                 INSERT INTO owners (id, username, profile_url)
-                                 VALUES (:owner_id, :username, :profile_url); 
+                                 INSERT INTO owners (username, profile_url, repo_id)
+                                 VALUES (:username, :profile_url, :repo_id)
+                                 RETURNING id;
                                         """)
-                    db.session.execute(owners_query, {
-                        "owner_id": owner_id,
+                    owners_result = db.session.execute(owners_query, {
                         "username": username,
-                        "profile_url": ""
-                    })
+                        "profile_url": "",
+                        "repo_id": repo_id
+                    }).fetchone()
+                    
+                    # Get the generated owner_id
+                    owner_id = owners_result[0]
 
                     photos_query = text("""
-                                INSERT INTO photos (id, title, url, source, tags, uploaded_at, location_id, latitude, longitude, owner_id, geom, profile_url)
+                                INSERT INTO photos (title, url, source, tags, uploaded_at, location_id, latitude, longitude, owner_id, geom, profile_url, repo_id)
                                 VALUES (:photo_id, :title, :url, :source, :tags, :uploaded_at, :location_id, :latitude, :longitude, :owner_id, 
-                                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :profile_url);
+                                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :profile_url, :repo_id);
                                  """)
 
                     db.session.execute(photos_query, {
-                        "photo_id": str(uuid.uuid4()),
                         "title": filename,
                         "url": image_path,
                         "source": "User uploaded",
@@ -122,6 +125,7 @@ def upload():
                         "longitude": lng,
                         "owner_id": owner_id,
                         "profile_url": "",
+                        "repo_id": repo_id
                     })
 
                     db.session.commit()

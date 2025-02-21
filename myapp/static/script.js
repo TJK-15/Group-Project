@@ -26,9 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function loadImages(data) {
         console.log("#######Data inside loadImages#######:", data); // Debugging output
-        if (data.length == 0) { // Alert if no images are found
-            alert("No images found. Expand radius");
-        }
         allImages = data;
         imageTotal = data.length;
         currentIndex = 0;
@@ -48,7 +45,8 @@ document.addEventListener("DOMContentLoaded", function () {
             imageCounter.innerText = `Showing ${currentIndex+1}-${currentIndex+imagesPerPage} of ${imageTotal}`;
             imageCounter.style.display = "block";
         } else if (imageTotal == 0) {
-            imageCounter.style.display = "none";
+            imageCounter.innerText = `No images found. Consider expanding the radius.`;
+            imageCounter.style.display = "block";
         } else {
             imageCounter.innerText = `Showing ${currentIndex+1} - ${imageTotal}`;
             imageCounter.style.display = "block";
