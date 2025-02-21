@@ -56,11 +56,31 @@ Geophoto-Explorer is a web application that allows users to interact with a map 
 
 ## Installation Guide
 ### 1. Clone the Repository
-git clone https://github.com/your-username/geophoto-explorer.git
-cd geophoto-explorer
+- git clone https://github.com/your-username/geophoto-explorer.git cd geophoto-explorer
 ### 2. Install Dependencies
-pip install -r requirements.txt
+- pip install -r requirements.txt
 ### 3. Set Up Database
 Ensure PostgreSQL and PostGIS are installed. Then, execute: 
-psql -U your_user -d your_database -f database_config.sql
+- psql -U your_user -d your_database -f database_config.sql
+### 4. Set Up Environment Variables
+Create a .env file and configure:
+- DB_NAME=your_database
+- DB_USER=your_user
+- DB_PASSWORD=your_password
+- DB_HOST=localhost
+- DB_PORT=5432
+- FLICKR_API_KEY=your_flickr_api_key
+- MAPILLARY_API_KEY=your_mapillary_api_key
+### 5. Run the Flask Server
+- python api.py
+### 6. Open the Frontend
+Serve the map.html file to access the interactive map.
 
+## Contributors
+- Jenna - Backend & Data Processing
+- Nolan - Frontend & API Development
+
+## Future Enhancements
+- Integrate more geospatial datasets. (eg. Wikimedia)
+- Improve image ranking based on relevance.
+- Add user authentication for uploads.
