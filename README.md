@@ -13,7 +13,7 @@ Features:
 5. Interactive Map: Displays images dynamically using Leaflet.js.
 6. User Upload Support: Allows users to upload images with geotags.
 
-# Technologies Used
+# Technologies
 Backend:
 1. Python (Flask) - Handles API requests and database interactions.
 2. PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
@@ -29,7 +29,20 @@ APIs:
 2. Mapillary API - Fetches geotagged images from Mapillary.
 3. Geopy (Nominatim) - Performs reverse geocoding.
 
-Database
-1. locations: id (Primary Key), latitude, longitude, country, state, city, geom (Geospatial point)
-2️. owners: id (Primary Key), username, profile_url
-3. photos: id (Primary Key), title, url, uploaded_at, latitude, longitude, location_id (FK), owner_id (FK), geom (Geospatial point)
+# Database Schema
+Tables:
+1. locations (Stores unique geographic coordinates)
+2. owners (Stores information about image owners)
+3. photos (Stores geotagged photos)
+
+# API Endpoints
+1. Fetch Images Based on Location
+Endpoint: /api/coordinates
+Method: POST
+Request Body:
+{
+  "latitude": 41.146547,
+  "longitude": -8.612047,
+  "radius": 500
+}
+Response: Returns a list of images within the given radius.
