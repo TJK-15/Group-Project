@@ -20,8 +20,8 @@ CREATE TABLE owners (
     repo_id TEXT UNIQUE
 );
 
--- Ensure username and profile_url are unique
-CREATE UNIQUE INDEX unique_owner ON owners (username, profile_url);
+-- Ensure username, profile_url and repo_id are unique
+CREATE UNIQUE INDEX unique_owner ON owners (username, profile_url, repo_id);
 
 -- create photos table
 CREATE TABLE photos (
@@ -40,9 +40,8 @@ CREATE TABLE photos (
     repo_id TEXT
 );
 
--- Ensure photo uniqueness (title, repo_id, url be unique)
-CREATE UNIQUE INDEX unique_repo_url ON photos (repo_id, url);
-CREATE UNIQUE INDEX unique_photo ON photos (title, url);
+-- Ensure photo url is unique
+CREATE UNIQUE INDEX unique_photo ON photos (url);
 
 -- location_id in photos table should correspond to the id in the locations table
 UPDATE photos
