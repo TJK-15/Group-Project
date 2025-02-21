@@ -11,20 +11,41 @@ import json
 # Create a flask Blueprint for API routes
 api_bp = Blueprint('api', __name__)
     
-# Function to check if file upload is a png, jpg, or jpeg image
 def allowed_file(filename):
+    """
+    Checks if the extension in a given file is valid (png, jpg, jpeg). 
+    
+    Args: 
+        filename(string): The file name and extension
+        
+    Returns: 
+        True if filename has extension and that extension exists in the app config 
+
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
-# This endpoint retrieves the latitude, longitude, and radius for the database image request
 @api_bp.route('/coordinates', methods=['POST'])
 def get_coordinates():
+    """
+    API endpoint that retrieves the latitude, longitude, and search radius from script.js and returns images within that geographic
+    radius from the database. 
+    
+    Args:
+        data (json): A json string with latitude (float), longitude (float), and radius (int) fields. 
+        See line 129 in script.js for fetch request. 
+        
+    Returns:
+        A json string with fields id (serial int), title (string), geom (dict), url (string) for each image found in the database.
+    """
+    
     data = request.get_json()
     lat = data.get('latitude')
     lng = data.get('longitude')
-    radius = data.get('radius')
+    radius = data.get('radius') # Split json into each var
     print("Received coords and radius:", data)
 
+    # Return error message if invalid inputs
     if lat is None or lng is None or radius is None:
         return jsonify({'error': 'Invalid input'}), 400
 
@@ -39,9 +60,34 @@ def get_coordinates():
     print(results)
     return jsonify([{"id": row[0], "title": row[1], "geom": row[2], "url": row[3]} for row in results])
 
-# This endpoint allows the user to upload an image to the database
-@api_bp.route('/upload', methods=['GET', 'POST'])
+@api_bp.route('/upload', methods=['POST'])
 def upload():
+    """
+    API endpoint that allows the user to upload an image to the database with location and user information. 
+    
+    Methods:
+        POST: Handles image upload, stores data about image, and inserts records to database
+    
+    Args (POST):
+        File (file object): An jpg, png, or jpeg image. See line 31 in map.html and line 144 in script.js . 
+        Lat (float): A float value representing latitude taken from user input on the map. See line 154 in script.js
+        Lng (float): A float value representing longitude taken from user input onthe map. See line 155 in script.js
+        Username (string): A string value representing a unique username inputted by the user in the webapp. See line 145 in script.js
+        
+    Processes: 
+        1. Validate the file type to be an image (jpg, png, jpeg)
+        2. Reverse geocode coordinate data
+        3. Get current time
+        4. Generate unique ID for repo_id 
+        5. Save image to UPLOAD_FOLDER locally 
+        6. Save image data to database 
+    
+    Returns:
+        JSON response on success, on error with html err code 
+        400 bad request: If bad lat or lng value
+        500 internal server error: If error occurs in database insert 
+    """
+    
     if request.method == 'POST':
         print('api.py: Beginning image upload')
         # check if the post request has the file part
@@ -56,6 +102,7 @@ def upload():
         if file and allowed_file(file.filename):
             print('api.py File and filename are OK!')
             filename = secure_filename(file.filename)
+            unique_filename = f"{uuid.uuid4().hex}_{filename}"
             lat = float(request.form.get('latitude'))
             lng = float(request.form.get('longitude'))
             locations = reverse_geocode(lat, lng)
@@ -69,7 +116,7 @@ def upload():
             if lat is None or lng is None:
                 return jsonify({'error': 'Invalid lat/long, please select on map'}), 400
             else:
-                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
                 print(image_path)
                 file.save(image_path)  # Save the file
                 print(f"Latitude: {lat}, Type: {type(lat)}")
@@ -106,6 +153,15 @@ def upload():
                         "repo_id": repo_id
                     }).fetchone()
                     
+                    if owners_result is None:  # If no new row was inserted, retrieve existing owner_id
+                        existing_owner_query = text("""
+                                                    SELECT id FROM owners WHERE username = :username AND profile_url = :profile_url;
+                                                    """)
+                        owners_result = db.session.execute(existing_owner_query, {
+                            "username": username,
+                            "profile_url": ""
+                            }).fetchone()
+                        
                     # Get the generated owner_id
                     owner_id = owners_result[0]
 
