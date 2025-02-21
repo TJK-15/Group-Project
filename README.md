@@ -15,19 +15,19 @@ Features:
 
 # Technologies Used
 Backend:
-Python (Flask) - Handles API requests and database interactions.
-PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
-SQLAlchemy - Manages database connections and queries.
+1. Python (Flask) - Handles API requests and database interactions.
+2. PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
+3. SQLAlchemy - Manages database connections and queries.
 
 Frontend:
-Leaflet.js - Interactive map rendering.
-JavaScript (ES6) - Fetching and displaying images dynamically.
-HTML & CSS - User interface design and responsiveness.
+1. Leaflet.js - Interactive map rendering.
+2. JavaScript (ES6) - Fetching and displaying images dynamically.
+3. HTML & CSS - User interface design and responsiveness.
 
 APIs:
-Flickr API - Fetches geotagged images from Flickr.
-Mapillary API - Fetches geotagged images from Mapillary.
-Geopy (Nominatim) - Performs reverse geocoding.
+1. Flickr API - Fetches geotagged images from Flickr.
+2. Mapillary API - Fetches geotagged images from Mapillary.
+3. Geopy (Nominatim) - Performs reverse geocoding.
 
 Database
 1. locations: id (Primary Key), latitude, longitude, country, state, city, geom (Geospatial point)
