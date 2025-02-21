@@ -4,7 +4,7 @@ import datetime
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from geopy.geocoders import Nominatim
-from config import Config 
+from myapp.config import Config 
 import time
 import json
 

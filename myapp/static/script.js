@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Image Gallery Logic
     const gallery = document.getElementById("gallery");
     const loadMoreButton = document.createElement("button");
-    loadMoreButton.innerText = "Load More";
+    loadMoreButton.innerText = "Load More"; // Load more button for when the image array is greater than 12 images
     loadMoreButton.id = "load-more";
     loadMoreButton.style.display = "none";  // Initially hidden
     document.body.appendChild(loadMoreButton); // Append to body for positioning
@@ -25,6 +25,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const imagesPerPage = 12;
 
     function loadImages(data) {
+        /**
+         * This function loads the initial 12 images retrieved from a json string. 
+         * 
+         * Args:
+         *  data (jsonString): A jsonstring containing image data
+         * 
+         * Processes:
+         *  Reset current index to 0 
+         *  Will run the displayNextImages function
+         *  Load more button will appear if more than 12 images
+         */
         console.log("#######Data inside loadImages#######:", data); // Debugging output
         allImages = data;
         imageTotal = data.length;
@@ -35,12 +46,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function displayNextImages() {
+        /**
+         * Displays the next batch of images in the gallery and updates the map with markers.
+         * 
+         * Args:
+         *  allImages (array): Complete list of images received from the API
+         *
+         * Processes:
+         *  Clears previous markers from the map.
+         *  Updates the image counter with the current batch information.
+         *  Loads and displays the next set of images (up to `imagesPerPage` at a time).
+         *  Adds markers to the map based on image locations.
+         *  Enables or disables the "Load More" button based on remaining images.
+         *
+         *
+         * Side Effects:
+         *  Modifies `currentIndex` by incrementing it for each new image added.
+         *  Updates the UI elements (`gallery`, `imageCounter`, `loadMoreButton`).
+         *  Updates map markers using Leaflet
+         */
+
         if (markerGroup.getLayers().length != 0) { // Removes markers from map if they exist previously 
             console.log('MARKER GROUP HAS LAYERS!!')
             markerGroup.clearLayers(map);
         } 
 
-        // Add to imageCounter
+        // image counter display logic 
         if (currentIndex+imagesPerPage <= imageTotal) {
             imageCounter.innerText = `Showing ${currentIndex+1}-${currentIndex+imagesPerPage} of ${imageTotal}`;
             imageCounter.style.display = "block";
@@ -55,14 +86,14 @@ document.addEventListener("DOMContentLoaded", function () {
         gallery.innerHTML = ''; // clear gallery
         const nextImageBatch = allImages.slice(currentIndex, currentIndex + imagesPerPage);
         nextImageBatch.forEach(image => {
-            currentIndex = currentIndex + 1
+            currentIndex = currentIndex + 1;
             const img = document.createElement("img");
-            img.src = image.url;  // Correctly accessing the URL field
+            img.src = image.url; 
             img.alt = image.title || "Gallery Image";  // Use title if available
             const coords = JSON.parse(image.geom);
             console.log('Coordinates:', coords.coordinates); // Test with coords
-            L.marker([coords.coordinates[1], coords.coordinates[0]]).addTo(markerGroup);
-            markerGroup.addTo(map);
+            L.marker([coords.coordinates[1], coords.coordinates[0]]).addTo(markerGroup); // Add marker at lng, lat to marker group
+            markerGroup.addTo(map); // Add marker group to map
             img.addEventListener("click", () => openImageModal(image.url));  // Click event to enlarge image
             gallery.appendChild(img);
 
@@ -80,8 +111,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // Click on load more to load next images
     loadMoreButton.addEventListener("click", displayNextImages);
 
-    // Open the enlarged image
     function openImageModal(imageUrl) {
+        /**
+         * This function enlarges the clicked image by enabling the modal container. 
+         * 
+         * Args:
+         *  imageUrl (str): url source of the image
+         * 
+         * Returns:
+         *  Updates modal source to image source and enables viewing of modal on screen
+         */
         const modal = document.getElementById("image-modal");
         const modalImg = document.getElementById("modal-img");
 
@@ -97,8 +136,25 @@ document.addEventListener("DOMContentLoaded", function () {
     var cmarker;
     var circle;
 
-    // On click function, gets lat, long, radius and creates API request
     map.on('click', function(e) {
+        /**
+         * This function will retrieve the latitude, longitude, and search radius upon the user clicking on the map. Then, we
+         * create an API request to api/coordinates. 
+         * 
+         * Args: 
+         *  lat (float): latitude value upon clicking on the map
+         *  lng (float): longitude value upon clicking on the map
+         *  radius (int): search radius in meters
+         * 
+         * Processes:
+         *  1. Retrieve lat, lng, radius
+         *  2. Add marker at location of click and popup of lat, lng, radius
+         *  3. Sends data to API via json body of lat, lng, radius
+         *  4. Sends json body to loadImages function
+         * 
+         * Returns:
+         *  JSON body of latitude, longitude, and radius. 
+         */
         gallery.innerHTML = ''; // clear gallery
         var lat = e.latlng.lat.toFixed(6);
         var lng = e.latlng.lng.toFixed(6);
@@ -106,10 +162,10 @@ document.addEventListener("DOMContentLoaded", function () {
         var radiusText = radius + ' meters'; // Display the radius in meters
         
         if (cmarker) {
-            cmarker.remove();
+            cmarker.remove(); // remove central marker if already exists
         }
         if (circle) {
-            circle.remove();
+            circle.remove(); // remove radius circle if already exists
         }
             
         cmarker = L.marker([lat, lng]).addTo(map)
@@ -125,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
             
         document.getElementById('info').innerText = `Coordinates: ${lat}, ${lng} | Radius: ${radiusText}`;
 
-        // Send data to Flask 
+        // Send data to API
         fetch('/api/coordinates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -139,6 +195,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // File Upload Logic
     document.getElementById('upload-button').addEventListener('click', function () {
+        /**
+         * This function sends an uploaded image and username to the Flask API. 
+         * 
+         * Args:
+         *  fileInput: file inputted by user
+         *  username (str): username inputted by user
+         * 
+         * Processes:
+         *  1. Retrieves current lat, lng on the map
+         *  2. Creates form data object to send file, username, lat, lng
+         *  3. Sends form data to api/uploads
+         * 
+         * Returns:
+         *  File, username, lat, lng in the form of a json string
+         *  Data error message via browser alert
+         */
         const fileInput = document.getElementById('file');
         const usernameInput = document.getElementById('username');
         const file = fileInput.files[0];
