@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
             img.alt = image.title || "Gallery Image";  // Use title if available
             const coords = JSON.parse(image.geom);
             console.log('Coordinates:', coords.coordinates); // Test with coords
-            var marker = L.marker([coords.coordinates[1], coords.coordinates[0]]).addTo(markerGroup);
+            L.marker([coords.coordinates[1], coords.coordinates[0]]).addTo(markerGroup);
             markerGroup.addTo(map);
             img.addEventListener("click", () => openImageModal(image.url));  // Click event to enlarge image
             gallery.appendChild(img);

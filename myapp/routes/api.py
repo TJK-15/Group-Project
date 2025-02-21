@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, jsonify, flash, redirect
+from flask import Blueprint, request, jsonify, flash, redirect, current_app
 from myapp import db
 from werkzeug.utils import secure_filename
 import os
@@ -14,7 +14,7 @@ api_bp = Blueprint('api', __name__)
 # Function to check if file upload is a png, jpg, or jpeg image
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in api_bp.app.config['ALLOWED_EXTENSIONS']
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 # This endpoint retrieves the latitude, longitude, and radius for the database image request
 @api_bp.route('/coordinates', methods=['POST'])
@@ -69,7 +69,7 @@ def upload():
             if lat is None or lng is None:
                 return jsonify({'error': 'Invalid lat/long, please select on map'}), 400
             else:
-                image_path = os.path.join(api_bp.app.config['UPLOAD_FOLDER'], filename)
+                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 print(image_path)
                 file.save(image_path)  # Save the file
                 print(f"Latitude: {lat}, Type: {type(lat)}")
@@ -97,6 +97,7 @@ def upload():
                     owners_query = text("""
                                  INSERT INTO owners (username, profile_url, repo_id)
                                  VALUES (:username, :profile_url, :repo_id)
+                                 ON CONFLICT (username, profile_url) DO Nothing
                                  RETURNING id;
                                         """)
                     owners_result = db.session.execute(owners_query, {
@@ -110,13 +111,13 @@ def upload():
 
                     photos_query = text("""
                                 INSERT INTO photos (title, url, source, tags, uploaded_at, location_id, latitude, longitude, owner_id, geom, profile_url, repo_id)
-                                VALUES (:photo_id, :title, :url, :source, :tags, :uploaded_at, :location_id, :latitude, :longitude, :owner_id, 
+                                VALUES (:title, :url, :source, :tags, :uploaded_at, :location_id, :latitude, :longitude, :owner_id, 
                                  ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :profile_url, :repo_id);
                                  """)
 
                     db.session.execute(photos_query, {
                         "title": filename,
-                        "url": image_path,
+                        "url": image_path.replace('myapp', ''),
                         "source": "User uploaded",
                         "tags": json.dumps(['Upload']),
                         "uploaded_at": ctime,

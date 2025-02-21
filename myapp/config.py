@@ -10,5 +10,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # FIle upload configuration
-    UPLOAD_FOLDER = "static/uploads"
+    UPLOAD_FOLDER = "myapp\\static\\uploads"
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
