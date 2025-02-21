@@ -13,7 +13,7 @@ Features:
 5. Interactive Map: Displays images dynamically using Leaflet.js.
 6. User Upload Support: Allows users to upload images with geotags.
 
-# Technologies
+## Technologies
 Backend:
 1. Python (Flask) - Handles API requests and database interactions.
 2. PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
