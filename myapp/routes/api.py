@@ -1,0 +1,206 @@
+from flask import Blueprint, request, jsonify, flash, redirect, current_app
+from myapp import db
+from werkzeug.utils import secure_filename
+import os
+from myapp.etl.etl import reverse_geocode
+from sqlalchemy import text
+import uuid
+import datetime
+import json
+
+# Create a flask Blueprint for API routes
+api_bp = Blueprint('api', __name__)
+    
+def allowed_file(filename):
+    """
+    Checks if the extension in a given file is valid (png, jpg, jpeg). 
+    
+    Args: 
+        filename(string): The file name and extension
+        
+    Returns: 
+        True if filename has extension and that extension exists in the app config 
+
+    """
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+@api_bp.route('/coordinates', methods=['POST'])
+def get_coordinates():
+    """
+    API endpoint that retrieves the latitude, longitude, and search radius from script.js and returns images within that geographic
+    radius from the database. 
+    
+    Methods: 
+        POST: Handles image selection from database
+    
+    Args (POST):
+        data (json): A json string with latitude (float), longitude (float), and radius (int) fields. 
+        See line 129 in script.js for fetch request. 
+    
+    Processes:
+        1. Retrieves lat, lng, radius from user input
+        2. Retrieves images from database according to location, radius
+        
+    Returns:
+        A json string with fields id (serial int), title (string), geom (dict), url (string) for each image found in the database.
+        400 bad request: If lat/lng/radius are invalid or empty
+    """
+    
+    data = request.get_json()
+    # Split json into each var
+    lat = data.get('latitude')
+    lng = data.get('longitude')
+    radius = data.get('radius') 
+    print("Received coords and radius:", data)
+
+    # Return error message if invalid inputs
+    if lat is None or lng is None or radius is None:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    query = text("""
+        SELECT id, title, ST_AsGeoJSON(geom) AS geom, url
+        FROM photos
+        WHERE ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius);
+    """)
+
+    results = db.session.execute(
+        query, {"lat": lat, "lng": lng, "radius": radius}).fetchall()
+    print(results)
+    return jsonify([{"id": row[0], "title": row[1], "geom": row[2], "url": row[3]} for row in results])
+
+@api_bp.route('/upload', methods=['POST'])
+def upload():
+    """
+    API endpoint that allows the user to upload an image to the database with location and user information. 
+    
+    Methods:
+        POST: Handles image upload, stores data about image, and inserts records to database
+    
+    Args (POST):
+        File (FileStorage): An jpg, png, or jpeg image. See line 31 in map.html and line 144 in script.js . 
+        Lat (float): A float value representing latitude taken from user input on the map. See line 154 in script.js
+        Lng (float): A float value representing longitude taken from user input onthe map. See line 155 in script.js
+        Username (string): A string value representing a unique username inputted by the user in the webapp. See line 145 in script.js
+        
+    Processes: 
+        1. Validate the file type to be an image (jpg, png, jpeg)
+        2. Reverse geocode coordinate data
+        3. Get current time
+        4. Generate unique ID for repo_id 
+        5. Save image to UPLOAD_FOLDER locally 
+        6. Save image data to database 
+    
+    Returns:
+        JSON response on success, on error with html err code 
+        400 bad request: If bad lat or lng value
+        500 internal server error: If error occurs in database insert 
+    """
+    
+    if request.method == 'POST':
+        print('api.py: Beginning image upload')
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            print('api.py File and filename are OK!')
+            filename = secure_filename(file.filename)
+            # To allow for image duplicates, assign uuid at beginning of image
+            unique_filename = f"{uuid.uuid4().hex}_{filename}"
+            
+            # Form data retrieval
+            lat = float(request.form.get('latitude'))
+            lng = float(request.form.get('longitude'))
+            locations = reverse_geocode(lat, lng)
+            ctime = datetime.datetime.now()
+            username = request.form['username']
+    
+            # repo id generated by UUID
+            repo_id = str(uuid.uuid4())
+            print("api.py lat, lng, locations, current time, username, owner_id are Ok!")
+
+            # ensure lat and lng fields are populated
+            if lat is None or lng is None:
+                return jsonify({'error': 'Invalid lat/long, please select on map'}), 400
+            else:
+                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                print(image_path)
+                file.save(image_path)  # Save the file
+                print(f"Latitude: {lat}, Type: {type(lat)}")
+                print(f"Longitude: {lng}, Type: {type(lng)}")
+
+                try:
+                    # SQL query to insert into locations and retrieve ID value
+                    location_query = text("""INSERT INTO locations (latitude, longitude, geom, country, state, city)
+                                 VALUES (:latitude, :longitude, 
+                                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :country, :state, :city)
+                                 RETURNING id; 
+                                 """)
+
+                    location_result = db.session.execute(location_query, {
+                        "latitude": lat,
+                        "longitude": lng,
+                        "country": locations[0],
+                        "state": locations[1],
+                        "city": locations[2]
+                    }).fetchone()
+
+                    # Get the generated location_id
+                    location_id = location_result[0]
+
+                    owners_query = text("""
+                                 INSERT INTO owners (username, profile_url, repo_id)
+                                 VALUES (:username, :profile_url, :repo_id)
+                                 ON CONFLICT (username, profile_url) DO Nothing
+                                 RETURNING id;
+                                        """)
+                    owners_result = db.session.execute(owners_query, {
+                        "username": username,
+                        "profile_url": "",
+                        "repo_id": repo_id
+                    }).fetchone()
+                    
+                    if owners_result is None:  # If no new row was inserted, retrieve existing owner_id
+                        existing_owner_query = text("""
+                                                    SELECT id FROM owners WHERE username = :username AND profile_url = :profile_url;
+                                                    """)
+                        owners_result = db.session.execute(existing_owner_query, {
+                            "username": username,
+                            "profile_url": ""
+                            }).fetchone()
+                        
+                    # Get the generated owner_id
+                    owner_id = owners_result[0]
+
+                    photos_query = text("""
+                                INSERT INTO photos (title, url, source, tags, uploaded_at, location_id, latitude, longitude, owner_id, geom, profile_url, repo_id)
+                                VALUES (:title, :url, :source, :tags, :uploaded_at, :location_id, :latitude, :longitude, :owner_id, 
+                                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :profile_url, :repo_id);
+                                 """)
+
+                    db.session.execute(photos_query, {
+                        "title": filename,
+                        "url": image_path.replace('myapp', ''),
+                        "source": "User uploaded",
+                        "tags": json.dumps(['Upload']),
+                        "uploaded_at": ctime,
+                        "location_id": location_id,
+                        "latitude": lat,
+                        "longitude": lng,
+                        "owner_id": owner_id,
+                        "profile_url": "",
+                        "repo_id": repo_id
+                    })
+
+                    db.session.commit()
+                    return jsonify({"message": "Image and data uploaded successfully"})
+
+                except Exception as e:
+                    db.session.rollback()
+                    return jsonify({"error": str(e)})
