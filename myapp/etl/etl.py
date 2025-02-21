@@ -1,93 +1,123 @@
 import requests
-import psycopg2
-import os
-from psycopg2 import sql
-from datetime import datetime
+import uuid
+import datetime
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 from geopy.geocoders import Nominatim
-from dotenv import load_dotenv
+from config import Config 
 import time
-import traceback
+import json
 
-# API Keys
-FLICKR_API_KEY = "51afcf93fbde43be1742a2f8d31f5430"
-MAPILLARY_ACCESS_TOKEN = "MLY|9221287197987531|a53011b8aa3930d9874dbe9f0aaf09b9"
-
-# Initialize Geopy
+# Initialize Geopy for reverse geocoding
 geolocator = Nominatim(user_agent="geo_updater")
 
-# Load .env file
-load_dotenv()
+# Connect to PostgreSQL using the configuration from Config
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+Session = sessionmaker(bind=engine)
 
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-
-# Connect to PostgreSQL
-def get_db_connection():
-    return psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT
-    )
-
-# Reverse geocoding function
 def reverse_geocode(lat, lon):
+    """
+    Performs reverse geocoding to obtain country, state, and city based on latitude and longitude.
+
+    Args:
+        lat (float): Latitude of the location.
+        lon (float): Longitude of the location.
+
+    Returns:
+        tuple: (country, state, city) as strings.
+    """
     try:
-        time.sleep(1)  # Delay 1 second to avoid overloading Nominatim
-        location = geolocator.reverse((lat, lon), language="en", exactly_one=True, timeout=5)  # Increase timeout
+        time.sleep(1)  # Delay to avoid overloading Nominatim
+        location = geolocator.reverse((lat, lon), language="en", exactly_one=True, timeout=5)
         if location:
             address = location.raw.get("address", {})
             return (
                 address.get("country", "Unknown"),
-                address.get("state", address.get("county", "Unknown")),
+                address.get("state", "Unknown"),
                 address.get("city", address.get("town", address.get("village", "Unknown")))
             )
     except Exception as e:
-        print(f"Reverse geocoding errors: {e}")  # Display Errors
+        print(f"Reverse geocoding error: {e}")
     return "Unknown", "Unknown", "Unknown"
 
-# Retrieve Flickr Photo Function
-def fetch_flickr_photos():
-    print("Retrieving photos from Flickr...")
-    url = "https://www.flickr.com/services/rest/"
-    bbox = "-8.6910, 41.1070, -8.5530, 41.1810" # Set the lat and lon of the specific location 
-    
-    params = {
-        "method": "flickr.photos.search",
-        "api_key": FLICKR_API_KEY,
-        "format": "json",
-        "nojsoncallback": 1, # When set to 1, Flickr will send back pure JSON
-        "has_geo": 1, # Whether to search only for geotagged photos, 1 means only geotagged photos, 0 is not limited
-        "bbox": bbox,
-        "extras": "geo,url_o,owner_name,license,owner_url",
-        "license": "1,2,3,4,5,6,7,8,9,10",
-        "per_page": 5, # Adjust the number of photos 
-        "page": 1 # Choose the page of photos, usually set to 1
-    }
+def fetch_photos(source):
+    """
+    Fetches geotagged photos from a specified API source (Flickr or Mapillary).
 
-    response = requests.get(url, params=params)
+    Args:
+        source (str): The API source ("Flickr" or "Mapillary").
+
+    Returns:
+        list: A list of dictionaries containing photo metadata.
+    """
+    print(f"Fetching photos from {source}...")
+
+    # API settings for Flickr and Mapillary
+    api_settings = {
+        "Flickr": {
+            "url": "https://www.flickr.com/services/rest/",
+            "params": {
+                "method": "flickr.photos.search",
+                "api_key": Config.FLICKR_API_KEY,
+                "format": "json",
+                "nojsoncallback": 1,
+                "has_geo": 1,
+                "bbox": "-8.6910, 41.1070, -8.5530, 41.1810", # Bounding box for geographic area
+                "extras": "geo,url_o,owner_name,license,owner_url",
+                "license": "1,2,3,4,5,6,7,8,9,10",
+                "per_page": 2, # Number of photos to fetch
+                "page": 1
+            },
+            "parse": lambda data: data.get("photos", {}).get("photo", [])
+        },
+        "Mapillary": {
+            "url": "https://graph.mapillary.com/images",
+            "params": {
+                "access_token": Config.MAPILLARY_API_KEY,
+                "fields": "id,computed_geometry,thumb_2048_url,creator",
+                "bbox": "-8.6910, 41.1070, -8.5530, 41.1810", # Bounding box for geographic area
+                "limit": 2 # Number of photos to fetch
+            },
+            "parse": lambda data: data.get("data", [])
+        }
+    }
+    
+    # Retrieve API settings for the specified source
+    settings = api_settings.get(source)
+    if not settings:
+        print(f"Invalid source: {source}")
+        return []
+    
+    response = requests.get(settings["url"], params=settings["params"])
     data = response.json()
 
-    if "photos" not in data:
-        print("Unable to get Flickr photos")
+    # Extract photo data
+    photos_data = settings["parse"](data)
+    if not photos_data:
+        print(f"Failed to retrieve {source} photos")
         return []
-
+    
     photos = []
-    for photo in data["photos"]["photo"]:
-        lat = photo.get("latitude")
-        lon = photo.get("longitude")
-        url = photo.get("url_o")
-        title = photo.get("title", "").strip()
-
+    for photo in photos_data:
+        # Extract location and metadata
+        if source == "Flickr":
+            lat, lon = photo.get("latitude"), photo.get("longitude")
+            url, title = photo.get("url_o"), photo.get("title", "").strip()
+            owner_repo_id = photo["owner"]
+            owner_name = photo.get("owner_name", "Unknown")
+            profile_url = f"https://www.flickr.com/people/{photo['owner']}"
+        else:  # Mapillary
+            lon, lat = photo.get("computed_geometry", {}).get("coordinates", [None, None])
+            url = photo.get("thumb_2048_url", "N/A")
+            title = f"Mapillary Photo {photo['id']}"
+            owner_repo_id = photo["creator"]["id"] if "creator" in photo else None
+            owner_name = photo["creator"]["username"] if "creator" in photo else "Unknown"
+            profile_url = f"https://www.mapillary.com/app/user/{owner_name}" if owner_name != "Unknown" else "Unknown"
+        
         if lat and lon and url and title:
-            country, state, city = reverse_geocode(lat, lon)  # Directly reverse geocoding
-            owner_profile_url = f"https://www.flickr.com/people/{photo['owner']}"  # Retrieve Flickr User Profile URL
+            country, state, city = reverse_geocode(lat, lon)
             photos.append({
-                "photo_id": photo["id"],
+                "repo_id": photo["id"],
                 "title": title,
                 "url": url,
                 "latitude": lat,
@@ -95,155 +125,76 @@ def fetch_flickr_photos():
                 "country": country,
                 "state": state,
                 "city": city,
-                "source": "API",
-                "owner_id": photo["owner"],
-                "owner_name": photo.get("owner_name", "Unknown"),
-                "profile_url": owner_profile_url
+                "source": source,
+                "owner_repo_id": owner_repo_id,
+                "owner_name": owner_name,
+                "profile_url": profile_url
             })
 
-    print(f"Get {len(photos)} Flickr photos")
+    print(f"Retrieved {len(photos)} photos from {source}")
     return photos
 
-# Retrieve Mapillary Photo Functions
-def fetch_mapillary_photos():
-    print("Retrieving photos from Mapillary...")
-    url = "https://graph.mapillary.com/images"
-    bbox = "23.9200, 49.7800, 24.1000, 49.8900" # Set the lat and lon of the specific location 
-    params = {
-        "access_token": MAPILLARY_ACCESS_TOKEN,
-        "fields": "id,computed_geometry,thumb_2048_url,creator",
-        "bbox": bbox,
-        "limit": 1 # Adjust the number of photos 
-    }
-
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    if "data" not in data:
-        print("Unable to get Mapillary photos")
-        return []
-
-    photos = []
-    for photo in data["data"]:
-        lat, lon = None, None
-        if "computed_geometry" in photo and "coordinates" in photo["computed_geometry"]:
-            lon, lat = photo["computed_geometry"]["coordinates"]
-
-        if lat and lon:
-            country, state, city = reverse_geocode(lat, lon)  # Directly reverse geocoding
-            owner_profile_url = f"https://www.mapillary.com/app/user/{photo['creator']['username']}" if "creator" in photo else "Unknown"
-            photos.append({
-                "photo_id": photo["id"],
-                "title": f"Mapillary Photo {photo['id']}",
-                "url": photo.get("thumb_2048_url", "N/A"),
-                "latitude": lat,
-                "longitude": lon,
-                "country": country,
-                "state": state,
-                "city": city,
-                "source": "API",
-                "owner_id": photo["creator"]["id"] if "creator" in photo else "Unknown",
-                "owner_name": photo["creator"]["username"] if "creator" in photo else "Unknown",
-                "profile_url": owner_profile_url
-            })
-
-    print(f"Get {len(photos)} Mapillary photos")
-    return photos
-
-# Save Photos to PostgreSQL
 def save_photos_to_db(photos):
-    if not photos:
-        print("No photos that can be stored")
-        return
+    """
+    Saves fetched photos to the PostgreSQL database.
 
-    print("Loading PostgreSQL...")
-
+    Args:
+        photos (list): A list of dictionaries containing photo metadata.
+    """
+    session = Session()
+    
     for photo in photos:
         try:
-            conn = get_db_connection()  # Ensure each photo is processed with a new DB connection
-            cursor = conn.cursor()
-
-            # Ensure photo_id, owner_id are `TEXT`
-            photo_id = str(photo["photo_id"])
-            owner_id = str(photo["owner_id"])
-
-            # Filter out invalid URLs
-            if not photo["url"] or photo["url"] == "N/A":
-                print(f"Skip invalid URL photos: {photo_id}")
-                continue
-
-            # Filter out invalid owner_id
-            if owner_id == "Unknown":
-                print(f"Skip invalid Owner photos: {photo_id}")
-                continue
-
-            # Save Location
-            cursor.execute(
-                """
-                INSERT INTO locations (latitude, longitude, country, state, city, geom)
-                VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+            # Insert location data
+            location_query = text("""
+                INSERT INTO locations (latitude, longitude, geom, country, state, city)
+                VALUES (:latitude, :longitude, ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :country, :state, :city)
                 ON CONFLICT (latitude, longitude) DO NOTHING
                 RETURNING id;
-                """,
-                (photo["latitude"], photo["longitude"], photo["country"], photo["state"], photo["city"], 
-                 photo["longitude"], photo["latitude"]),
-            )
-            location_id = cursor.fetchone()
-            if location_id:
-                location_id = location_id[0]
-            else:
-                # If the Location already exists, look up the existing location_id
-                cursor.execute("SELECT id FROM locations WHERE latitude = %s AND longitude = %s", 
-                               (photo["latitude"], photo["longitude"]))
-                location_id = cursor.fetchone()
-                if location_id:
-                    location_id = location_id[0]
-                else:
-                    print(f"Location ID not found, skip photo {photo_id}")
-                    continue  # Skip the photo
+            """)
+            location_result = session.execute(location_query, photo).fetchone()
+            location_id = location_result[0] if location_result else None
             
-            # Save to owners table
-            cursor.execute(
-                """
-                INSERT INTO owners (id, username, profile_url)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (id) DO NOTHING;
-                """,
-                (owner_id, photo["owner_name"], photo["profile_url"]),
-            ) 
+            # Insert owner data
+            owners_query = text("""
+                INSERT INTO owners (username, profile_url, repo_id)
+                VALUES (:owner_name, :profile_url, :owner_repo_id)
+                ON CONFLICT (repo_id) DO NOTHING
+                RETURNING id;
+            """)
+            owners_result = session.execute(owners_query, photo).fetchone()
+            owner_id = owners_result[0] if owners_result else None
+            
+            # Insert photo data
+            photos_query = text("""
+                INSERT INTO photos (repo_id, title, url, source, tags, uploaded_at, location_id, latitude, longitude, owner_id, geom, profile_url)
+                VALUES (:repo_id, :title, :url, :source, :tags, :uploaded_at, :location_id, :latitude, :longitude, :owner_id, 
+                ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326), :profile_url)
+                ON CONFLICT (url) DO UPDATE SET uploaded_at = EXCLUDED.uploaded_at;
+            """)
+            session.execute(photos_query, {
+                **photo,
+                "tags": json.dumps(["Upload"]),
+                "uploaded_at": datetime.datetime.now(datetime.UTC),
+                "location_id": location_id,
+                "owner_id": owner_id
+            })
 
-            # Save into Photos table
-            cursor.execute(
-                """
-                INSERT INTO photos (id, title, url, source, uploaded_at, location_id, latitude, longitude, owner_id, geom)
-                VALUES (%s, %s, %s, 'API', %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-                ON CONFLICT (id) DO NOTHING;
-                """,
-                (
-                    photo_id, photo["title"], photo["url"], datetime.utcnow(),
-                    location_id, photo["latitude"], photo["longitude"], owner_id,
-                    photo["longitude"], photo["latitude"]
-                ),
-            )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
+            session.commit()
+            print(f"Inserted/Updated photo: {photo['repo_id']}")
 
         except Exception as e:
-            print(f"Unable to save photos {photo_id}: {e}")
-            conn.rollback()  # Avoid transaction lockup
-            cursor.close()
-            conn.close()
-            continue
+            session.rollback()
+            print(f"Failed to save photo {photo['repo_id']}: {e}")
 
-    print("All photos have been successfully saved to PostgreSQL!")
+    session.close()
+    print("All photos have been successfully stored")
 
-# Main Execution Functions
+# Main execution function
 if __name__ == "__main__":
-    flickr_photos = fetch_flickr_photos()
-    mapillary_photos = fetch_mapillary_photos()
+    flickr_photos = fetch_photos("Flickr")
+    mapillary_photos = fetch_photos("Mapillary")
 
     all_photos = flickr_photos + mapillary_photos
     save_photos_to_db(all_photos)
-    print("Done！")
+    print("Done")
