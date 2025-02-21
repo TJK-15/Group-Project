@@ -18,12 +18,10 @@ Geophoto-Explorer is a web application that allows users to interact with a map 
 - Python (Flask) - Handles API requests and database interactions.
 - PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
 - SQLAlchemy - Manages database connections and queries.
-
 ### Frontend:
 - Leaflet.js - Interactive map rendering.
 - JavaScript (ES6) - Fetching and displaying images dynamically.
 - HTML & CSS - User interface design and responsiveness.
-
 ### APIs:
 - Flickr API - Fetches geotagged images from Flickr.
 - Mapillary API - Fetches geotagged images from Mapillary.
@@ -62,4 +60,6 @@ git clone https://github.com/your-username/geophoto-explorer.git
 cd geophoto-explorer
 ### 2. Install Dependencies
 pip install -r requirements.txt
+### 3. Set Up Database
+Ensure PostgreSQL and PostGIS are installed. Then, execute: psql -U your_user -d your_database -f database_config.sql
 
