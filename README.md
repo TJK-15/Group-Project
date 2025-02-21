@@ -36,7 +36,7 @@ Geophoto-Explorer is a web application that allows users to interact with a map 
 ## API Endpoints
 ### 1. Fetch Images Based on Location
 - Endpoint: /api/coordinates
-- Method: POST
+- Method: GET
 - Request Body:
 {
   "latitude": 41.146547,
