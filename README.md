@@ -14,7 +14,7 @@ Geophoto Explorer is a web application that allows users to interact with a map 
 - User Upload Support: Allows users to upload images with geotags.
 
 ## Technologies
-Backend:
+### Backend:
 1. Python (Flask) - Handles API requests and database interactions.
 2. PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
 3. SQLAlchemy - Manages database connections and queries.
