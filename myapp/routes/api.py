@@ -1,9 +1,8 @@
-from flask import Blueprint, request, jsonify, flash, redirect
-from app import db
-from config import Config
+from flask import Blueprint, request, render_template, jsonify, flash, redirect
+from myapp import db
 from werkzeug.utils import secure_filename
 import os
-from app.etl.etl import reverse_geocode
+from myapp.etl.etl import reverse_geocode
 from sqlalchemy import text
 import uuid
 import datetime
@@ -11,14 +10,14 @@ import json
 
 # Create a flask Blueprint for API routes
 api_bp = Blueprint('api', __name__)
-
+    
 # Function to check if file upload is a png, jpg, or jpeg image
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in api_bp.app.config['ALLOWED_EXTENSIONS']
 
 # This endpoint retrieves the latitude, longitude, and radius for the database image request
-@api_bp.route('/api/coordinates', methods=['POST'])
+@api_bp.route('/coordinates', methods=['POST'])
 def get_coordinates():
     data = request.get_json()
     lat = data.get('latitude')
@@ -41,7 +40,7 @@ def get_coordinates():
     return jsonify([{"id": row[0], "title": row[1], "geom": row[2], "url": row[3]} for row in results])
 
 # This endpoint allows the user to upload an image to the database
-@api_bp.route('/api/upload', methods=['GET', 'POST'])
+@api_bp.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         print('api.py: Beginning image upload')
