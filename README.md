@@ -13,6 +13,22 @@ Features:
 5. Interactive Map: Displays images dynamically using Leaflet.js.
 6. User Upload Support: Allows users to upload images with geotags.
 
+Technologies Used
+Backend:
+Python (Flask) - Handles API requests and database interactions.
+PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
+SQLAlchemy - Manages database connections and queries.
+
+Frontend:
+Leaflet.js - Interactive map rendering.
+JavaScript (ES6) - Fetching and displaying images dynamically.
+HTML & CSS - User interface design and responsiveness.
+
+APIs:
+Flickr API - Fetches geotagged images from Flickr.
+Mapillary API - Fetches geotagged images from Mapillary.
+Geopy (Nominatim) - Performs reverse geocoding.
+
 Database
 1. locations: id (Primary Key), latitude, longitude, country, state, city, geom (Geospatial point)
 2️. owners: id (Primary Key), username, profile_url
