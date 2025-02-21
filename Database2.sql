@@ -9,7 +9,7 @@ CREATE TABLE locations (
     city TEXT
 );
 
--- Create unique index to ensure the same latitude and longitude not repeated
+-- Create unique index to ensure latitude and longitude sets are unique
 CREATE UNIQUE INDEX unique_location ON locations (latitude, longitude);
 
 -- create owners table
@@ -20,8 +20,8 @@ CREATE TABLE owners (
     repo_id TEXT UNIQUE
 );
 
--- Ensure username, profile_url and repo_id are unique
-CREATE UNIQUE INDEX unique_owner ON owners (username, profile_url, repo_id);
+-- Ensure repo_id is unique
+CREATE UNIQUE INDEX unique_owner ON owners (repo_id);
 
 -- create photos table
 CREATE TABLE photos (
