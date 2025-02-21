@@ -61,5 +61,6 @@ cd geophoto-explorer
 ### 2. Install Dependencies
 pip install -r requirements.txt
 ### 3. Set Up Database
-Ensure PostgreSQL and PostGIS are installed. Then, execute: psql -U your_user -d your_database -f database_config.sql
+Ensure PostgreSQL and PostGIS are installed. Then, execute: 
+psql -U your_user -d your_database -f database_config.sql
 
