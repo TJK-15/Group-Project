@@ -5,7 +5,7 @@ Jenna and Nolan
 ## Project Description:
 Geophoto Explorer is a web application that allows users to interact with a map and find geotagged photos within a specified geographic radius. Users can click on any location on the map and retrieve images taken near that location from publicly available datasets. Additionally, users can upload their own geotagged images to the database. 
 
-## Features:
+## Features
 - Fetch Geotagged Photos: Retrieves images from Flickr & Mapillary based on geographic coordinates.
 - Store Location Metadata: Stores latitude, longitude, country, state, and city details.
 - Geospatial Database: Uses PostgreSQL + PostGIS for advanced geospatial queries.
