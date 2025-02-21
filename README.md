@@ -46,3 +46,12 @@ Geophoto Explorer is a web application that allows users to interact with a map 
   "radius": 500
 }
 - Response: Returns a list of images within the given radius.
+### 2. Upload an Image
+- Endpoint: /api/upload
+- Method: POST
+- Form Data:
+  - file (Image File)
+  - username (Text)
+  - latitude (Float)
+  - longitude (Float)
+- Response: Confirms successful upload.
