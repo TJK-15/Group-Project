@@ -15,34 +15,34 @@ Geophoto Explorer is a web application that allows users to interact with a map 
 
 ## Technologies
 ### Backend:
-1. Python (Flask) - Handles API requests and database interactions.
-2. PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
-3. SQLAlchemy - Manages database connections and queries.
+- Python (Flask) - Handles API requests and database interactions.
+- PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
+- SQLAlchemy - Manages database connections and queries.
 
-Frontend:
-1. Leaflet.js - Interactive map rendering.
-2. JavaScript (ES6) - Fetching and displaying images dynamically.
-3. HTML & CSS - User interface design and responsiveness.
+### Frontend:
+- Leaflet.js - Interactive map rendering.
+- JavaScript (ES6) - Fetching and displaying images dynamically.
+- HTML & CSS - User interface design and responsiveness.
 
-APIs:
-1. Flickr API - Fetches geotagged images from Flickr.
-2. Mapillary API - Fetches geotagged images from Mapillary.
-3. Geopy (Nominatim) - Performs reverse geocoding.
+### APIs:
+- Flickr API - Fetches geotagged images from Flickr.
+- Mapillary API - Fetches geotagged images from Mapillary.
+- Geopy (Nominatim) - Performs reverse geocoding.
 
-# Database Schema
-Tables:
+## Database Schema
+### Tables:
 1. locations (Stores unique geographic coordinates)
 2. owners (Stores information about image owners)
 3. photos (Stores geotagged photos)
 
-# API Endpoints
-1. Fetch Images Based on Location
-Endpoint: /api/coordinates
-Method: POST
-Request Body:
+## API Endpoints
+### 1. Fetch Images Based on Location
+- Endpoint: /api/coordinates
+- Method: POST
+- Request Body:
 {
   "latitude": 41.146547,
   "longitude": -8.612047,
   "radius": 500
 }
-Response: Returns a list of images within the given radius.
+- Response: Returns a list of images within the given radius.
