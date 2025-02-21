@@ -55,14 +55,14 @@ document.addEventListener("DOMContentLoaded", function () {
          * Processes:
          *  Clears previous markers from the map.
          *  Updates the image counter with the current batch information.
-         *  Loads and displays the next set of images (up to `imagesPerPage` at a time).
+         *  Loads and displays the next set of images (up to imagesPerPage at a time).
          *  Adds markers to the map based on image locations.
          *  Enables or disables the "Load More" button based on remaining images.
          *
          *
          * Side Effects:
-         *  Modifies `currentIndex` by incrementing it for each new image added.
-         *  Updates the UI elements (`gallery`, `imageCounter`, `loadMoreButton`).
+         *  Modifies currentIndex by incrementing it for each new image added.
+         *  Updates the UI elements (gallery, imageCounter, loadMoreButton).
          *  Updates map markers using Leaflet
          */
 
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
             markerGroup.clearLayers(map);
         } 
 
-        // image counter display logic 
+        // Image counter display logic 
         if (currentIndex+imagesPerPage <= imageTotal) {
             imageCounter.innerText = `Showing ${currentIndex+1}-${currentIndex+imagesPerPage} of ${imageTotal}`;
             imageCounter.style.display = "block";
@@ -100,10 +100,10 @@ document.addEventListener("DOMContentLoaded", function () {
             // Disable the "Load More" button if there are no more images to load
             if (currentIndex >= imageTotal) {
                 loadMoreButton.disabled = true;
-                loadMoreButton.style.display = "none"; // Optionally hide the button
+                loadMoreButton.style.display = "none";
             } else {
                 loadMoreButton.disabled = false;
-                loadMoreButton.style.display = "block"; // Ensure the button is visible
+                loadMoreButton.style.display = "block"; 
             }
         });
     }
