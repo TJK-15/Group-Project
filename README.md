@@ -37,6 +37,20 @@ Create a .env file and configure:
 - Interactive Map: Displays images dynamically using Leaflet.js.
 - User Upload Support: Allows users to upload images with geotags.
 
+## Web Application Demo
+![Start screen of web application open within a web browser.](https://github.com/user-attachments/assets/54803f1f-61df-41c4-929e-142f048bb9f2)
+
+Upon opening the web application, users will be confronted with the above image of a map on the left side, an empty image gallery, and some buttons on the bottom left. These will be explained in detail later. 
+Firstly, the map can be interacted with by clicking and dragging to pan over the map. Users can then zoom in and out of the map using the Plus/Minus button at the top-left of the map, or the scroll wheel of the
+mouse. The map was created using Leaflet and OpenStreetMap. Upon zooming closely into the map, the user can identify notable locations, such as roads, restaurants, and other landmarks. 
+
+![The city of Lisboa open in the map viewer.](https://github.com/user-attachments/assets/89451df1-8a8f-44b3-8c8f-1df93e306007)
+
+Once the user has found a spot of interest on the map, they can then click
+
+
+
+
 ## Technologies
 ### Backend:
 - Python (Flask) - Handles API requests and database interactions.
