@@ -1,9 +1,33 @@
 # Geophoto-Explorer
 Members:
-Jenna and Nolan
+Jenna Guo and Nolan Kressin
 
 ## Project Description:
 Geophoto-Explorer is a web application that allows users to interact with a map and find geotagged photos within a specified geographic radius. Users can click on any location on the map and retrieve images taken near that location from publicly available datasets. Additionally, users can upload their own geotagged images to the database. 
+
+## Installation Guide
+### 1. Clone the Repository
+- git clone https://github.com/your-username/geophoto-explorer.git cd geophoto-explorer
+### 2. Install Dependencies (using miniconda)
+- conda install --file requirements.txt 
+You can also create an env using this below:
+- conda create --name <env> --file <requirements.txt>
+### 3. Set Up Database
+Ensure PostgreSQL and PostGIS are installed. Then, execute: 
+- psql -U your_user -d your_database -f database_config.sql
+### 4. Set Up Environment Variables
+Create a .env file and configure:
+- DB_NAME=your_database
+- DB_USER=your_user
+- DB_PASSWORD=your_password
+- DB_HOST=localhost
+- DB_PORT=5432
+- FLICKR_API_KEY=your_flickr_api_key (see API_KEY.txt)
+- MAPILLARY_API_KEY=your_mapillary_api_key (see API_KEY.txt)
+### 5. Run the Flask Server
+- python run.py
+### 6. Open the Frontend
+- Serve the map.html file in your local browser on port 8000. 
 
 ## Features
 - Fetch Geotagged Photos: Retrieves images from Flickr & Mapillary based on geographic coordinates.
@@ -16,13 +40,15 @@ Geophoto-Explorer is a web application that allows users to interact with a map 
 ## Technologies
 ### Backend:
 - Python (Flask) - Handles API requests and database interactions.
-- PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
 - SQLAlchemy - Manages database connections and queries.
+- PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
+
 ### Frontend:
 - Leaflet.js - Interactive map rendering.
-- JavaScript (ES6) - Fetching and displaying images dynamically.
+- JavaScript - Fetching and displaying images dynamically.
 - HTML & CSS - User interface design and responsiveness.
-### APIs:
+
+### APIs used in ETL:
 - Flickr API - Fetches geotagged images from Flickr.
 - Mapillary API - Fetches geotagged images from Mapillary.
 - Geopy (Nominatim) - Performs reverse geocoding.
@@ -54,29 +80,7 @@ Geophoto-Explorer is a web application that allows users to interact with a map 
   - longitude (Float)
 - Response: Confirms successful upload.
 
-## Installation Guide
-### 1. Clone the Repository
-- git clone https://github.com/your-username/geophoto-explorer.git cd geophoto-explorer
-### 2. Install Dependencies (using miniconda)
-- conda install --file requirements.txt 
-You can also create an env using this below:
-- conda create --name <env> --file <requirements.txt>
-### 3. Set Up Database
-Ensure PostgreSQL and PostGIS are installed. Then, execute: 
-- psql -U your_user -d your_database -f database_config.sql
-### 4. Set Up Environment Variables
-Create a .env file and configure:
-- DB_NAME=your_database
-- DB_USER=your_user
-- DB_PASSWORD=your_password
-- DB_HOST=localhost
-- DB_PORT=5432
-- FLICKR_API_KEY=your_flickr_api_key (see API_KEY.txt)
-- MAPILLARY_API_KEY=your_mapillary_api_key (see API_KEY.txt)
-### 5. Run the Flask Server
-- python run.py
-### 6. Open the Frontend
-Serve the map.html file to access the interactive map.
+
 
 ## Contributors
 - Jenna Guo- Backend & Data Processing
