@@ -33,7 +33,7 @@ Create a .env file and configure:
   directory. These datasets use data from the cities of Lisbon and Porto in Portugal. You may have to update the serial reference for each table to the next available integer for proper indexing when
   uploading images. 
 
-## Features
+## Features:
 - Fetch Geotagged Photos: Retrieves images from Flickr & Mapillary based on geographic coordinates.
 - Store Location Metadata: Stores latitude, longitude, country, state, and city details.
 - Geospatial Database: Uses PostgreSQL + PostGIS for advanced geospatial queries.
@@ -41,7 +41,7 @@ Create a .env file and configure:
 - Interactive Map: Displays images dynamically using Leaflet.js and HTML/CSS.
 - User Upload Support: Allows users to upload images with geotagged information. 
 
-## Demo
+## App Demo:
 ![Start screen of web application open within a web browser.](https://github.com/user-attachments/assets/54803f1f-61df-41c4-929e-142f048bb9f2)
 ### _Image 1. Start screen of web application open within a web browser._
 
@@ -72,7 +72,7 @@ user will have to click on the map or expand their search radius until images ap
 ### _Image 4. Search query for images in downtown Lisbon._
 
 
-The user also has the ability to upload an image with coordinate information. Users can click on the 'Choose File' button file found next to the 'Upload Image:' dialog. This will allow you to scroll through file explorer for any image with a jpg, jpeg, or png extension. If an image with an invalid extension is chosen, the upload process will fail. The file name will appear next to the 'Choose File' button once an image has been selected. Users must then input a username in the 'Username:' text field. Currently there are no protections against special characters in this field, although this has potential to cause issues. We would advise the user to select a username without special characters (such as #, //, *, etc). If the image was uploaded successfully to the database, an alert will appear on the browser with the message 'Image and data uploaded successfully'. If an error occurred, the alert will show the error instead. See the below images for an example. 
+The user also has the ability to upload an image with coordinate information. Users can click on the 'Choose File' button file found next to the 'Upload Image:' dialog. This will allow you to scroll through file explorer for any image with a jpg, jpeg, or png extension. If an image with an invalid extension is chosen, the upload process will fail. The file name will appear next to the 'Choose File' button once an image has been selected. Users must then input a username in the 'Username:' text field. Currently there are no protections against special characters in this field, although this has potential to cause issues. We would advise the user to select a username without special characters (such as #, //, *, etc). If the image was uploaded successfully to the database, an alert will appear on the browser with the message 'Image and data uploaded successfully'. If an error occurred, the alert will show the error instead. Currently, uploaded images are simply stored in the local directory titled 'uploads' under myapp/static. See the below images for an example. 
 
 ![Image file and username](https://github.com/user-attachments/assets/b625d97b-b230-4d7f-8527-33be2b9bc8b6)
 
@@ -84,10 +84,8 @@ The user also has the ability to upload an image with coordinate information. Us
 
 And congrats! You have completed the demo of the Geophoto Explorer web app. We hope to add more features and functionality soon. Ciao!
 
+## App Framework:
 
-
-
-## Technologies
 ### Backend:
 - Python (Flask) - Handles API requests and database interactions.
 - SQLAlchemy - Manages database connections and queries.
@@ -98,7 +96,7 @@ And congrats! You have completed the demo of the Geophoto Explorer web app. We h
 - JavaScript - Fetching and displaying images dynamically.
 - HTML & CSS - User interface design and responsiveness.
 
-### APIs used in ETL:
+### ETL:
 - Flickr API - Fetches geotagged images from Flickr.
 - Mapillary API - Fetches geotagged images from Mapillary.
 - Geopy (Nominatim) - Performs reverse geocoding.
@@ -108,6 +106,10 @@ And congrats! You have completed the demo of the Geophoto Explorer web app. We h
 1. locations (Stores unique geographic coordinates)
 2. owners (Stores information about image owners)
 3. photos (Stores geotagged photos)
+
+The application utilises a database defined in PostgreSQL with the PostGIS extension for spatial queries. We define three tables for use in the app: locations, owners, and photos. 
+The locations table stores information about unique geographic coordinates, such as the country, state, and city where the points are found. We also store a geometry point in WGS84 for that location. The locations table also has a unique constraint on latitude and longitude pairs, so that no uploaded photo is in a duplicate geographic location. This table can helps us query photos more efficiently by using specific geographic locations and reduces redundancy by removing duplicate locations. The owners table is how we store/authenticate unique users found in our database. This table helps us keep track of all the unique users who have contributed to the database (through an external repository or uploaded via the application). We define an unique external repository ID for images found with FLickr and Mapillary. Currently, the username field is not unique (as it sometimes returns empty values), although we would hope to make this unique in the future. Finally, the photos table captures information about the urls of all images and associated metatdata, such as upload date, location, and information about the owners. We define a unique url for each photo to reduce redundancy in the dataset. The photos table also references the IDs of the associated owner and location from their respective tables. 
+
 
 ## API Endpoints
 ### 1. Fetch Images Based on Location
