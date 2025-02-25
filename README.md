@@ -29,9 +29,7 @@ Create a .env file and configure:
 ### 6. Open the Frontend
 - Serve the map.html file in your local browser on port 8000.
 ### 7. (Optional) Import Data into the Map
-- The etl.py script can take a long time to run for larger geographic areas. To test image extraction from the website, you can import data into the database using their respective .csv files found in the 'data'
-  directory. These datasets use data from the cities of Lisbon and Porto in Portugal. You may have to update the serial reference for each table to the next available integer for proper indexing when
-  uploading images. 
+- The **etl.py** script can take a long time to run for larger geographic areas. To test image extraction from the website, you can import data into the database using their respective .csv files found in the 'data' directory. These datasets use data from the cities of Lisbon and Porto in Portugal. You may have to update the serial reference for each table to the next available integer for proper indexing when uploading images. 
 
 ## Features:
 - Fetch Geotagged Photos: Retrieves images from Flickr & Mapillary based on geographic coordinates.
@@ -55,7 +53,7 @@ mouse. The map was created using Leaflet and OpenStreetMap. Upon zooming closely
 ### _Image 2. The city of Lisboa open in the map viewer in OpenStreetMaps_
 
 
-Once the user has found a spot of interest on the map, they can then click once to retrieve images for that location. This opens an API request to the 'coordinates' endpoint in Flask. The user should be aware
+Once the user has found a spot of interest on the map, they can then click once to retrieve images for that location. This opens an API request to the **'coordinates'** endpoint in Flask. The user should be aware
 of the 'Search Radius (meters)' button found directly under the map (pictured below). A positive integer value can be inputted into this field to decrease or expand the search radius for images. Note that the
 unit used for the search radius is meters. Once a location has been selected on the map via mouse click, the webpage will update with the geographic latitude, longitude, and radius values in WGS 84 (Web Mercator) projection.
 
@@ -112,7 +110,7 @@ Inside the 'etl' folder, we see another init file and etl.py. The init allows us
 
 Finally, the 'static' and 'templates' folder contain information for our frontend. 'static' contains script.js, styles.css, and the upload folder for uploaded images to be hosted. The 'templates' folder contains 'map.html' which defines our webpage document. 
 
-## Database Schema
+## Database Schema:
 ### Tables:
 1. locations (Stores unique geographic coordinates)
 2. owners (Stores information about image owners)
@@ -123,14 +121,19 @@ The locations table stores information about unique geographic coordinates, such
 
 ## Extract, Transform, Load (ETL) Module 
 The ETL module gathers image data from Flickr and Mapillary and also defines a function to reverse geocode spatial coordinates. It then saves the image and associated data into the database.
+
 ![image](https://github.com/user-attachments/assets/3fc5d77d-f734-425f-b917-97393c97e0fb)
 
 Firstly, we use the fetch_photos function grabs pictures from both Flickr and Mapillary. Settings are defined for API calls for both repositories. Currently, we have defined a bounding box over Porto, Portugal for image extraction with a limit of two photos to extract. These settings can be changed but may dramatically increase processing times for images. 
+
 ![image](https://github.com/user-attachments/assets/643c8fc8-fe8d-4bbf-bbc6-b76a5a8406f3)
 
 The API calls are then sent in a 'get' call and their data parsed through. For each image, we take the geographic information and owner information. To get more information about the set of coordinates from the images, we reverse geocode them using the reverse_geocode function. This function has a 1 second timer per image to avoid overloading Nominatim, which also slows the image processing time significantly. Photos are then saved into the database via the save_photos_to_db function using SQLAlchemy. 
 
 ## API Endpoints
+
+There are two endpoints defined in the API, both organised in api.py. These endpoints allow the user to query the map for locations at a given point and radius, and upload an image at a given set of coordinates. 
+
 ### 1. Fetch Images Based on Location
 - Endpoint: /api/coordinates
 - Method: GET
