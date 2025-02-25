@@ -91,15 +91,26 @@ And congrats! You have completed the demo of the Geophoto Explorer web app. We h
 - SQLAlchemy - Manages database connections and queries.
 - PostgreSQL + PostGIS - Stores geospatial data and allows spatial queries.
 
+### ETL:
+- Flickr API - Fetches geotagged images from Flickr.
+- Mapillary API - Fetches geotagged images from Mapillary.
+- Geopy (Nominatim) - Performs reverse geocoding.
+
 ### Frontend:
 - Leaflet.js - Interactive map rendering.
 - JavaScript - Fetching and displaying images dynamically.
 - HTML & CSS - User interface design and responsiveness.
 
-### ETL:
-- Flickr API - Fetches geotagged images from Flickr.
-- Mapillary API - Fetches geotagged images from Mapillary.
-- Geopy (Nominatim) - Performs reverse geocoding.
+## Overall Code Structure:
+![image](https://github.com/user-attachments/assets/0c804259-fea3-48aa-8ba8-458a8e014c47)
+
+The code is structured into a main directory, with 'data' and 'myapp' as subdirectories. The main directory contains these folders, the readme.md, requirements.txt, the SQL set up file, a .env file for configuration, and a run.py file. Executing run.py will start the flask server and allow you to host the web application, assuming you have set up everything according to the aforementioned installation guide. Inside the 'data' directory are three .csv files, each corresponding to a different table, which can help the user import data faster for debugging and testing purposes. 
+
+The 'myapp' directory contains a init.py, config.py, 'etl', 'routes', 'static', and 'temlates' folders. The '__init.py__' file is where we initialize the flask app and database with SQLAlchemy. We also serve the map.html file and the flask Blueprint, which helps deal with modularity in the application. In 'config.py',  we define variables from the .env file, such as the database name and password, API keys for external repositories, and chosen upload folder (default to static/uploads). 
+
+Inside the 'etl' folder, we see another init file and etl.py. The init allows us to call the etl file as a package in other modules. The 'etl.py' file is where the user can upload data from the repositories to their database and is explained in more detail in the 'ETL' section of this document. Similarly, the 'routes' directory contains an init file and 'api.py'. 'api.py' is where we serve all the endpoints for our API. 
+
+Finally, the 'static' and 'templates' folder contain information for our frontend. 'static' contains script.js, styles.css, and the upload folder for uploaded images to be hosted. The 'templates' folder contains 'map.html' which defines our webpage document. 
 
 ## Database Schema
 ### Tables:
@@ -109,6 +120,9 @@ And congrats! You have completed the demo of the Geophoto Explorer web app. We h
 
 The application utilises a database defined in PostgreSQL with the PostGIS extension for spatial queries. We define three tables for use in the app: locations, owners, and photos. 
 The locations table stores information about unique geographic coordinates, such as the country, state, and city where the points are found. We also store a geometry point in WGS84 for that location. The locations table also has a unique constraint on latitude and longitude pairs, so that no uploaded photo is in a duplicate geographic location. This table can helps us query photos more efficiently by using specific geographic locations and reduces redundancy by removing duplicate locations. The owners table is how we store/authenticate unique users found in our database. This table helps us keep track of all the unique users who have contributed to the database (through an external repository or uploaded via the application). We define an unique external repository ID for images found with FLickr and Mapillary. Currently, the username field is not unique (as it sometimes returns empty values), although we would hope to make this unique in the future. Finally, the photos table captures information about the urls of all images and associated metatdata, such as upload date, location, and information about the owners. We define a unique url for each photo to reduce redundancy in the dataset. The photos table also references the IDs of the associated owner and location from their respective tables. 
+
+## Extract, Transform, Load (ETL) Module 
+The ETL module 
 
 
 ## API Endpoints
