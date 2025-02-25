@@ -5,7 +5,7 @@ Jenna Guo and Nolan Kressin
 ## Project Description:
 Geophoto-Explorer is a web application that allows users to interact with a map and find geotagged photos within a specified geographic radius. Users can click on any location on the map and retrieve images taken near that location from publicly available datasets. Additionally, users can upload their own geotagged images to the database. 
 
-## Installation and How to Run
+## Installation and How to Run:
 ### 1. Clone the Repository
 - git clone https://github.com/your-username/geophoto-explorer.git cd geophoto-explorer
 ### 2. Install Dependencies (using miniconda)
