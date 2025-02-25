@@ -122,8 +122,11 @@ The application utilises a database defined in PostgreSQL with the PostGIS exten
 The locations table stores information about unique geographic coordinates, such as the country, state, and city where the points are found. We also store a geometry point in WGS84 for that location. The locations table also has a unique constraint on latitude and longitude pairs, so that no uploaded photo is in a duplicate geographic location. This table can helps us query photos more efficiently by using specific geographic locations and reduces redundancy by removing duplicate locations. The owners table is how we store/authenticate unique users found in our database. This table helps us keep track of all the unique users who have contributed to the database (through an external repository or uploaded via the application). We define an unique external repository ID for images found with FLickr and Mapillary. Currently, the username field is not unique (as it sometimes returns empty values), although we would hope to make this unique in the future. Finally, the photos table captures information about the urls of all images and associated metatdata, such as upload date, location, and information about the owners. We define a unique url for each photo to reduce redundancy in the dataset. The photos table also references the IDs of the associated owner and location from their respective tables. 
 
 ## Extract, Transform, Load (ETL) Module 
-The ETL module 
-
+The ETL module gathers image data from Flickr and Mapillary and also defines a function to reverse geocode spatial coordinates. It then saves the image and associated data into the database.
+![image](https://github.com/user-attachments/assets/3fc5d77d-f734-425f-b917-97393c97e0fb)
+Firstly, the fetch_photos function grabs pictures from both Flickr and Mapillary. Firstly, we define settings for API calls for both repositories. Currently, we have defined a bounding box over Porto, Portugal for image extraction with a limit of two photos to extract. These settings can be changed but may dramatically increase processing times for images. 
+![image](https://github.com/user-attachments/assets/643c8fc8-fe8d-4bbf-bbc6-b76a5a8406f3)
+The API calls are then sent in a 'get' call and their data parsed through. For each image, we take the geographic information and owner information. To get more information about the set of coordinates from the images, we reverse geocode them using the reverse_geocode function. This function has a 1 second timer per image to avoid overloading Nominatim, which also slows the image processing time significantly. Photos are then saved into the database via the save_photos_to_db function using SQLAlchemy. 
 
 ## API Endpoints
 ### 1. Fetch Images Based on Location
