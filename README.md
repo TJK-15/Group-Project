@@ -5,7 +5,7 @@ Jenna Guo and Nolan Kressin
 ## Project Description:
 Geophoto-Explorer is a web application that allows users to interact with a map and find geotagged photos within a specified geographic radius. Users can click on any location on the map and retrieve images taken near that location from publicly available datasets. Additionally, users can upload their own geotagged images to the database. 
 
-## Installation Guide
+## Installation and How to Run
 ### 1. Clone the Repository
 - git clone https://github.com/your-username/geophoto-explorer.git cd geophoto-explorer
 ### 2. Install Dependencies (using miniconda)
@@ -27,15 +27,19 @@ Create a .env file and configure:
 ### 5. Run the Flask Server
 - python run.py
 ### 6. Open the Frontend
-- Serve the map.html file in your local browser on port 8000. 
+- Serve the map.html file in your local browser on port 8000.
+### 7. (Optional) Import Data into the Map
+- The etl.py script can take a long time to run for larger geographic areas. To test image extraction from the website, you can import data into the database using their respective .csv files found in the 'data'
+  directory. These datasets use data from the cities of Lisbon and Porto in Portugal. You may have to update the serial reference for each table to the next available integer for proper indexing when
+  uploading images. 
 
 ## Features
 - Fetch Geotagged Photos: Retrieves images from Flickr & Mapillary based on geographic coordinates.
 - Store Location Metadata: Stores latitude, longitude, country, state, and city details.
 - Geospatial Database: Uses PostgreSQL + PostGIS for advanced geospatial queries.
-- API for Data Retrieval: Provides endpoints for retrieving images based on location.
-- Interactive Map: Displays images dynamically using Leaflet.js.
-- User Upload Support: Allows users to upload images with geotags.
+- API for Data Retrieval: Provides endpoint for retrieving images based on location.
+- Interactive Map: Displays images dynamically using Leaflet.js and HTML/CSS.
+- User Upload Support: Allows users to upload images with geotagged information. 
 
 ## Demo
 ![Start screen of web application open within a web browser.](https://github.com/user-attachments/assets/54803f1f-61df-41c4-929e-142f048bb9f2)
@@ -46,7 +50,19 @@ mouse. The map was created using Leaflet and OpenStreetMap. Upon zooming closely
 
 ![The city of Lisboa open in the map viewer.](https://github.com/user-attachments/assets/89451df1-8a8f-44b3-8c8f-1df93e306007)
 
-Once the user has found a spot of interest on the map, they can then click
+Once the user has found a spot of interest on the map, they can then click once to retrieve images for that location. This opens an API request to the 'coordinates' endpoint in Flask. The user should be aware
+of the 'Search Radius (meters)' button found directly under the map (pictured below). A positive integer value can be inputted into this field to decrease or expand the search radius for images. Note that the
+unit used for the search radius is meters. Once a location has been selected on the map via mouse click, the webpage will update with the geographic latitude, longitude, and radius values in WGS 84 (Web Mercator) projection.
+
+![Radius button and coordinate information](https://github.com/user-attachments/assets/d89c9d2e-9a3c-41c0-9dd0-aed3c008df1f)
+
+If the queried location has no images available, a message will appear on the right side of the page in the gallery, under the 'See images here' header with 'No images found. Consider expanding radius.' The 
+user will have to click on the map or expand their search radius until images appear in the gallery. Images will appear in a 4x3 grid. An image counter will appear under the gallery showing the current index of images appearing in the gallery, and the total number of images returned in the query. Users can select the 'Load More' button to load more images into the gallery. However, due to memory/performance limitations, we currently only allow 12 images to be shown at once in the gallery. Clicking on the 'Load More' button too rapidly may impede the load time for images. For an example, see the query below taken in downtown Lisbon.
+
+![Search query for images in downtown Lisbon](https://github.com/user-attachments/assets/64429bcf-8e1f-47ee-b4aa-67ecc2e9a841)
+
+
+
 
 
 
