@@ -54,7 +54,7 @@ mouse. The map was created using Leaflet and OpenStreetMap. Upon zooming closely
 
 
 Once the user has found a spot of interest on the map, they can then click once to retrieve images for that location. This opens an API request to the **'coordinates'** endpoint in Flask. The user should be aware
-of the 'Search Radius (meters)' button found directly under the map (pictured below). A positive integer value can be inputted into this field to decrease or expand the search radius for images. Note that the
+of the **'Search Radius (meters)'** button found directly under the map (pictured below). A positive integer value can be inputted into this field to decrease or expand the search radius for images. Note that the
 unit used for the search radius is meters. Once a location has been selected on the map via mouse click, the webpage will update with the geographic latitude, longitude, and radius values in WGS 84 (Web Mercator) projection.
 
 
@@ -63,14 +63,14 @@ unit used for the search radius is meters. Once a location has been selected on 
 
 
 If the queried location has no images available, a message will appear on the right side of the page in the gallery, under the 'See images here' header with 'No images found. Consider expanding radius.' The 
-user will have to click on the map or expand their search radius until images appear in the gallery. Images will appear in a 4x3 grid. An image counter will appear under the gallery showing the current index of images appearing in the gallery, and the total number of images returned in the query. On the map, markers will appear showing the locations of the images found within the search radius. Users can select the 'Load More' button to load more images into the gallery. However, due to memory/performance limitations, we currently only allow 12 images to be shown at once in the gallery. Clicking on the 'Load More' button too rapidly may impede the load time for images so we recommend allowing all images to load before clicking on 'Load More'. Finally, the user can click on an image present in the gallery to open it in an expanded view. For an example, see the query below taken in downtown Lisbon.
+user will have to click on the map or expand their search radius until images appear in the gallery. Images will appear in a 4x3 grid. An image counter will appear under the gallery showing the current index of images appearing in the gallery, and the total number of images returned in the query. On the map, markers will appear showing the locations of the images found within the search radius. Users can select the 'Load More' button to load more images into the gallery. However, due to memory/performance limitations, we currently only allow 12 images to be shown at once in the gallery. Clicking on the **'Load More'** button too rapidly may impede the load time for images so we recommend allowing all images to load before clicking on 'Load More'. Finally, the user can click on an image present in the gallery to open it in an expanded view. For an example, see the query below taken in downtown Lisbon.
 
 
 ![Search query for images in downtown Lisbon](https://github.com/user-attachments/assets/64429bcf-8e1f-47ee-b4aa-67ecc2e9a841)
 ### _Image 4. Search query for images in downtown Lisbon._
 
 
-The user also has the ability to upload an image with coordinate information. Users can click on the 'Choose File' button file found next to the 'Upload Image:' dialog. This will allow you to scroll through file explorer for any image with a jpg, jpeg, or png extension. If an image with an invalid extension is chosen, the upload process will fail. The file name will appear next to the 'Choose File' button once an image has been selected. Users must then input a username in the 'Username:' text field. Currently there are no protections against special characters in this field, although this has potential to cause issues. We would advise the user to select a username without special characters (such as #, //, *, etc). If the image was uploaded successfully to the database, an alert will appear on the browser with the message 'Image and data uploaded successfully'. If an error occurred, the alert will show the error instead. Currently, uploaded images are simply stored in the local directory titled 'uploads' under myapp/static. See the below images for an example. 
+The user also has the ability to upload an image with coordinate information. Users can click on the **'Choose File'** button file found next to the 'Upload Image:' dialog. This will allow you to scroll through file explorer for any image with a jpg, jpeg, or png extension. If an image with an invalid extension is chosen, the upload process will fail. The file name will appear next to the **'Choose File'** button once an image has been selected. Users must then input a username in the 'Username:' text field. Currently there are no protections against special characters in this field, although this has potential to cause issues. We would advise the user to select a username without special characters (such as #, //, *, etc). If the image was uploaded successfully to the database, an alert will appear on the browser with the message 'Image and data uploaded successfully'. If an error occurred, the alert will show the error instead. Currently, uploaded images are simply stored in the local directory titled **'uploads'** under **myapp/static**. See the below images for an example. 
 
 ![Image file and username](https://github.com/user-attachments/assets/b625d97b-b230-4d7f-8527-33be2b9bc8b6)
 
@@ -102,13 +102,13 @@ And congrats! You have completed the demo of the Geophoto Explorer web app. We h
 ## Overall Code Structure:
 ![image](https://github.com/user-attachments/assets/0c804259-fea3-48aa-8ba8-458a8e014c47)
 
-The code is structured into a main directory, with 'data' and 'myapp' as subdirectories. The main directory contains these folders, the readme.md, requirements.txt, the SQL set up file, a .env file for configuration, and a run.py file. Executing run.py will start the flask server and allow you to host the web application, assuming you have set up everything according to the aforementioned installation guide. Inside the 'data' directory are three .csv files, each corresponding to a different table, which can help the user import data faster for debugging and testing purposes. 
+The code is structured into a main directory, with **'data'** and **'myapp'** as subdirectories. The main directory contains these folders, the readme.md, requirements.txt, the SQL set up file, a .env file for configuration, and a run.py file. Executing **run.py** will start the flask server and allow you to host the web application, assuming you have set up everything according to the aforementioned installation guide. Inside the 'data' directory are three .csv files, each corresponding to a different table, which can help the user import data faster for debugging and testing purposes. 
 
-The 'myapp' directory contains a init.py, config.py, 'etl', 'routes', 'static', and 'temlates' folders. The '__init.py__' file is where we initialize the flask app and database with SQLAlchemy. We also serve the map.html file and the flask Blueprint, which helps deal with modularity in the application. In 'config.py',  we define variables from the .env file, such as the database name and password, API keys for external repositories, and chosen upload folder (default to static/uploads). 
+The 'myapp' directory contains a init.py, config.py, 'etl', 'routes', 'static', and 'temlates' folders. The '__init.py__' file is where we initialize the flask app and database with SQLAlchemy. We also serve the map.html file and the flask Blueprint, which helps deal with modularity in the application. In **'config.py'**,  we define variables from the **.env** file, such as the database name and password, API keys for external repositories, and chosen upload folder (default to static/uploads). 
 
-Inside the 'etl' folder, we see another init file and etl.py. The init allows us to call the etl file as a package in other modules. The 'etl.py' file is where the user can upload data from the repositories to their database and is explained in more detail in the 'ETL' section of this document. Similarly, the 'routes' directory contains an init file and 'api.py'. 'api.py' is where we serve all the endpoints for our API. 
+Inside the 'etl' folder, we see another init file and **'etl.py'**. The init allows us to call the etl file as a package in other modules. The **'etl.py'** file is where the user can upload data from the repositories to their database and is explained in more detail in the 'ETL' section of this document. Similarly, the 'routes' directory contains an init file and **'api.py'**. **'api.py'** is where we serve all the endpoints for our API. 
 
-Finally, the 'static' and 'templates' folder contain information for our frontend. 'static' contains script.js, styles.css, and the upload folder for uploaded images to be hosted. The 'templates' folder contains 'map.html' which defines our webpage document. 
+Finally, the 'static' and 'templates' folder contain information for our frontend. 'static' contains **script.js**, **styles.css**, and the upload folder for uploaded images to be hosted. The 'templates' folder contains **'map.html'** which defines our webpage document. 
 
 ## Database Schema:
 ### Tables:
@@ -132,7 +132,7 @@ The API calls are then sent in a 'get' call and their data parsed through. For e
 
 ## API Endpoints
 
-There are two endpoints defined in the API, both organised in api.py. These endpoints allow the user to query the map for locations at a given point and radius, and upload an image at a given set of coordinates. 
+There are two endpoints defined in the API, both organised in **'api.py'**. These endpoints allow the user to query the map for locations at a given point and radius, and upload an image at a given set of coordinates. 
 
 ### 1. Fetch Images Based on Location
 - Endpoint: /api/coordinates
@@ -144,6 +144,8 @@ There are two endpoints defined in the API, both organised in api.py. These endp
   "radius": 500
 }
 - Response: Returns a list of images within the given radius.
+
+
 ### 2. Upload an Image
 - Endpoint: /api/upload
 - Method: POST
